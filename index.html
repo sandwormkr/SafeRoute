@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rota Segura · Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --green: #375534;
+    --green-dark: #263c24;
+    --green-soft: #6f9a6a;
+    --tint: #eff4ee;
+    --tint-2: #f6f9f5;
+    --ink: #1c2e1b;
+    --ink-dim: #5d6f5b;
+    --line: rgba(55, 85, 52, .16);
+    --white: #ffffff;
+    --error: #b3261e;
+    --ok: #2f6b2a;
+    --ease: cubic-bezier(.22, .8, .24, 1);
+    --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background:
+      radial-gradient(900px 480px at 50% -10%, var(--tint), transparent 70%),
+      var(--white);
+    display: grid;
+    place-items: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    overflow-x: hidden;
+    min-height: 100%;
+  }
+
+  /* Fundo: trajeto do ônibus */
+  .route { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .route .path { fill: none; stroke: rgba(55, 85, 52, .28); stroke-width: 2.5; stroke-dasharray: 2 12; stroke-linecap: round; }
+  .route .stop { fill: var(--white); stroke: rgba(55, 85, 52, .45); stroke-width: 2.5; }
+  .route .bus-halo { fill: rgba(55, 85, 52, .14); }
+  .route .bus { fill: var(--green); }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 430px;
+    padding: 34px 28px 26px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 30px 70px rgba(38, 60, 36, .14), 0 2px 6px rgba(38, 60, 36, .06);
+  }
+
+  .brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: var(--green);
+    display: grid; place-items: center;
+    box-shadow: 0 10px 22px rgba(55, 85, 52, .32);
+  }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: -.02em; margin: 18px 0 6px; color: var(--green-dark); }
+  .sub { margin: 0; color: var(--ink-dim); font-size: 15px; line-height: 1.45; max-width: 34ch; transition: opacity .25s var(--ease); }
+  .sub.fade { opacity: 0; }
+
+  /* Abas com indicador deslizante */
+  .tabs {
+    position: relative;
+    margin: 26px 0 20px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    background: var(--tint);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+  }
+  .tabs::before {
+    content: "";
+    position: absolute; top: 4px; bottom: 4px; left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 12px;
+    background: var(--green);
+    box-shadow: 0 6px 14px rgba(55, 85, 52, .28);
+    transition: transform .5s var(--ease);
+  }
+  .tabs[data-ativa="criar"]::before { transform: translateX(100%); }
+  .tab {
+    position: relative; z-index: 1;
+    font: 600 14px var(--font-body);
+    color: var(--ink-dim);
+    background: transparent; border: 0;
+    padding: 10px 8px; border-radius: 12px; cursor: pointer;
+    transition: color .4s var(--ease);
+  }
+  .tab[aria-selected="true"] { color: var(--white); }
+
+  /* Blocos que abrem e fecham suavemente */
+  .collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows .5s var(--ease), opacity .35s var(--ease);
+  }
+  .collapse > .inner { overflow: hidden; min-height: 0; }
+  .collapse.aberto { grid-template-rows: 1fr; opacity: 1; }
+  .collapse:not(.aberto) > .inner { visibility: hidden; transition: visibility 0s .5s; }
+  .collapse.aberto > .inner { visibility: visible; transition: visibility 0s 0s; }
+
+  .stack { padding-bottom: 12px; }
+
+  .field {
+    position: relative;
+    background: var(--tint-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 9px 16px 10px;
+    transition: border-color .25s, box-shadow .25s, background .25s;
+  }
+  .field:focus-within { background: var(--white); border-color: var(--green); box-shadow: 0 0 0 4px rgba(55, 85, 52, .12); }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-dim); margin-bottom: 1px; }
+  .field input {
+    width: 100%; background: transparent; border: 0; outline: 0;
+    color: var(--ink); font: 500 16px var(--font-body); padding: 2px 0;
+  }
+  .field input::placeholder { color: rgba(28, 46, 27, .32); }
+  .field.has-toggle input { padding-right: 70px; }
+  .toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: var(--green);
+    font: 600 13px var(--font-body); padding: 8px; border-radius: 10px; cursor: pointer;
+  }
+  .hint { margin: 6px 4px 0; font-size: 12.5px; color: var(--ink-dim); }
+
+  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; padding: 0; margin: 0; }
+  .roles legend { font-size: 12.5px; color: var(--ink-dim); padding: 0; margin-bottom: 8px; }
+  .role { position: relative; display: block; }
+  .role input { position: absolute; opacity: 0; pointer-events: none; }
+  .role span {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 12px 14px; border-radius: 16px;
+    border: 1px solid var(--line); background: var(--tint-2);
+    cursor: pointer; font-weight: 600; font-size: 14.5px;
+    transition: border-color .25s, background .25s;
+  }
+  .role small { font-weight: 400; font-size: 12px; color: var(--ink-dim); }
+  .role input:checked + span { border-color: var(--green); background: var(--tint); }
+  .role input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .aviso {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 12px 14px; border-radius: 16px;
+    background: var(--tint); border: 1px solid var(--line);
+    font-size: 13.5px; line-height: 1.5; color: var(--green-dark);
+  }
+  .aviso svg { flex: none; margin-top: 2px; }
+
+  .row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; color: var(--ink-dim); }
+  .row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .row input[type="checkbox"] { accent-color: var(--green); width: 16px; height: 16px; margin: 0; }
+  .link {
+    background: none; border: 0; padding: 4px 0; color: var(--green);
+    font: 600 13.5px var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+  }
+
+  .btn {
+    width: 100%;
+    font: 600 16px var(--font-body);
+    border: 0; border-radius: 16px; padding: 15px 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .15s, box-shadow .25s, opacity .25s, background .25s, border-color .25s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+  .btn-primary { background: var(--green); color: var(--white); box-shadow: 0 12px 26px rgba(55, 85, 52, .3); }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-ghost { background: var(--white); color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+  .btn-ghost:hover { border-color: var(--green); background: var(--tint-2); }
+
+  .msg { min-height: 20px; margin: 12px 2px 0; font-size: 14px; line-height: 1.4; }
+  .msg.error { color: var(--error); }
+  .msg.ok { color: var(--ok); }
+
+  .divider { display: flex; align-items: center; gap: 14px; color: var(--ink-dim); font-size: 13px; margin: 10px 0 14px; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .foot { margin: 18px 0 0; text-align: center; font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; }
+
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  .field input:focus-visible { outline: none; }
+
+  @media (max-width: 420px) {
+    .card { padding: 28px 18px 22px; border-radius: 28px; }
+    h1 { font-size: 27px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; }
+    .route animateMotion { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="route" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <path id="trajeto" class="path" d="M -40 640 C 180 640, 220 420, 420 430 S 640 700, 820 640 S 1000 300, 1260 260"/>
+  <circle class="stop" cx="150" cy="590" r="9"/>
+  <circle class="stop" cx="420" cy="430" r="9"/>
+  <circle class="stop" cx="820" cy="640" r="9"/>
+  <circle class="stop" cx="1090" cy="330" r="9"/>
+  <g>
+    <circle class="bus-halo" r="20"/>
+    <circle class="bus" r="7"/>
+    <animateMotion dur="26s" repeatCount="indefinite" rotate="0"><mpath href="#trajeto"/></animateMotion>
+  </g>
+</svg>
+
+<main class="card" id="card">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+        <rect x="5" y="6" width="22" height="16" rx="4" stroke="#fff" stroke-width="2.2"/>
+        <path d="M5 14h22" stroke="#fff" stroke-width="2.2"/>
+        <circle cx="11" cy="18" r="1.4" fill="#fff"/>
+        <circle cx="21" cy="18" r="1.4" fill="#fff"/>
+        <path d="M9 22v3M23 22v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>Rota Segura</h1>
+    <p class="sub" id="subtitulo">Acompanhe o ônibus escolar em tempo real.</p>
+  </div>
+
+  <div class="tabs" id="tabs" data-ativa="entrar" role="tablist" aria-label="Acesso">
+    <button class="tab" role="tab" id="tab-entrar" aria-selected="true" type="button">Entrar</button>
+    <button class="tab" role="tab" id="tab-criar" aria-selected="false" type="button">Criar conta</button>
+  </div>
+
+  <form id="form" novalidate>
+    <!-- Só no cadastro -->
+    <div class="collapse" id="bloco-nome"><div class="inner">
+      <div class="stack">
+        <div class="field">
+          <label for="nome">Nome completo</label>
+          <input id="nome" type="text" autocomplete="name" placeholder="Maria da Silva">
+        </div>
+      </div>
+    </div></div>
+
+    <div class="stack">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+      </div>
+      <div class="collapse" id="dica-email"><div class="inner">
+        <p class="hint">Motoristas devem usar o e-mail institucional @escola.pr.gov.br.</p>
+      </div></div>
+    </div>
+
+    <div class="stack">
+      <div class="field has-toggle">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" placeholder="Mínimo de 6 caracteres" minlength="6" required>
+        <button class="toggle" type="button" id="ver-senha" aria-label="Mostrar senha">Mostrar</button>
+      </div>
+    </div>
+
+    <!-- Só no cadastro -->
+    <div class="collapse" id="bloco-perfil"><div class="inner">
+      <div class="stack">
+        <fieldset class="roles">
+          <legend>Quem é você?</legend>
+          <label class="role">
+            <input type="radio" name="perfil" value="responsavel" checked>
+            <span>Responsável<small>Vejo o ônibus do aluno</small></span>
+          </label>
+          <label class="role">
+            <input type="radio" name="perfil" value="motorista">
+            <span>Motorista<small>Compartilho minha rota</small></span>
+          </label>
+        </fieldset>
+      </div>
+      <div class="collapse aberto" id="aviso-resp"><div class="inner">
+        <div class="stack">
+          <div class="aviso">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#375534" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            <span>Contas criadas manualmente precisam solicitar ao suporte a vinculação dos alunos sob sua responsabilidade. Só depois disso será possível acompanhar o ônibus.</span>
+          </div>
+        </div>
+      </div></div>
+      <div class="collapse" id="aviso-mot"><div class="inner">
+        <div class="stack">
+          <div class="aviso">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#375534" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            <span>Como motorista, entre em contato com o suporte para verificar sua identidade e receber suas funções e permissões na plataforma.</span>
+          </div>
+        </div>
+      </div></div>
+    </div></div>
+
+    <!-- Só no login -->
+    <div class="collapse aberto" id="bloco-login"><div class="inner">
+      <div class="stack">
+        <div class="row">
+          <label><input type="checkbox" id="lembrar" checked> Manter conectado</label>
+          <button class="link" type="button" id="esqueci">Esqueci a senha</button>
+        </div>
+      </div>
+    </div></div>
+
+    <button class="btn btn-primary" type="submit" id="enviar">Entrar</button>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </form>
+
+  <div class="divider">ou</div>
+
+  <button class="btn btn-ghost" type="button" id="google">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.2 7-10.3 7-17.6z"/>
+      <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/>
+      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+    </svg>
+    Continuar com Google
+  </button>
+
+  <p class="foot">Serviço gratuito. A localização do ônibus só é compartilhada com os responsáveis dos alunos da rota.</p>
+</main>
+
+<script>
+  /* ===== Configuração ===== */
+  const SUPABASE_URL = "https://leekskdtvthqmgbwuvpi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZWtza2R0dnRocW1nYnd1dnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDEyMTgsImV4cCI6MjEwNjcxNzIxOH0.u8et6VHb3dxmnpVR1lD5-l7j9vcrqdT9YEMp5Cy2tb4";
+
+  const DOMINIO_PERMITIDO = "escola.pr.gov.br";
+
+  const DESTINOS = {
+    responsavel: "dashboard.html",
+    motorista: "dashboard.html"
+  };
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  const form = $("form"), msg = $("msg"), enviar = $("enviar");
+  let modo = "entrar";
+
+  const emailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || "").trim());
+  const emailInstitucional = (email) =>
+    emailValido(email) && email.trim().toLowerCase().endsWith("@" + DOMINIO_PERMITIDO);
+
+  // O e-mail institucional é exigido apenas de motoristas
+  const perfilSelecionado = () => form.querySelector('input[name="perfil"]:checked').value;
+  const MSG_MOTORISTA = "Motoristas devem usar o e-mail @" + DOMINIO_PERMITIDO + ".";
+
+  // Alterna, com transição suave, a dica do e-mail e o aviso conforme o perfil escolhido
+  function atualizarDica() {
+    const motorista = perfilSelecionado() === "motorista";
+    $("dica-email").classList.toggle("aberto", modo === "criar" && motorista);
+    $("aviso-resp").classList.toggle("aberto", !motorista);
+    $("aviso-mot").classList.toggle("aberto", motorista);
+    $("email").placeholder = (modo === "criar" && motorista) ? "nome@escola.pr.gov.br" : "voce@email.com";
+  }
+  form.querySelectorAll('input[name="perfil"]').forEach(r => r.addEventListener("change", atualizarDica));
+
+  function mostrar(texto, tipo) {
+    msg.textContent = texto || "";
+    msg.className = "msg" + (tipo ? " " + tipo : "");
+  }
+
+  function traduzir(erro) {
+    const m = (erro && erro.message || "").toLowerCase();
+    if (m.includes("invalid login")) return "E-mail ou senha incorretos.";
+    if (m.includes("email not confirmed")) return "Confirme seu e-mail pelo link que enviamos antes de entrar.";
+    if (m.includes("already registered") || m.includes("already been registered")) return "Este e-mail já tem conta. Use a aba Entrar.";
+    if (m.includes("password should be at least")) return "A senha precisa ter pelo menos 6 caracteres.";
+    if (m.includes("rate limit")) return "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+    if (m.includes("failed to fetch") || m.includes("network")) return "Sem conexão. Verifique a internet e tente de novo.";
+    if (m.includes(DOMINIO_PERMITIDO) || m.includes("domain")) return MSG_MOTORISTA;
+    return "Não foi possível concluir. Tente novamente.";
+  }
+
+  function alternar(id, aberto) {
+    $(id).classList.toggle("aberto", aberto);
+    $(id).querySelectorAll("input, button").forEach(el => { el.tabIndex = aberto ? 0 : -1; });
+  }
+
+  function trocarModo(novo) {
+    if (novo === modo) return;
+    modo = novo;
+    const criar = novo === "criar";
+
+    $("tabs").dataset.ativa = novo;
+    $("tab-entrar").setAttribute("aria-selected", String(!criar));
+    $("tab-criar").setAttribute("aria-selected", String(criar));
+
+    alternar("bloco-nome", criar);
+    alternar("bloco-perfil", criar);
+    alternar("bloco-login", !criar);
+
+    $("senha").setAttribute("autocomplete", criar ? "new-password" : "current-password");
+    atualizarDica();
+    enviar.textContent = criar ? "Criar conta" : "Entrar";
+
+    const sub = $("subtitulo");
+    sub.classList.add("fade");
+    setTimeout(() => {
+      sub.textContent = criar
+        ? "Crie sua conta para começar a usar a rota."
+        : "Acompanhe o ônibus escolar em tempo real.";
+      sub.classList.remove("fade");
+    }, 180);
+
+    mostrar("");
+  }
+  // estado inicial: campos de cadastro fora da ordem de tabulação
+  alternar("bloco-nome", false);
+  alternar("bloco-perfil", false);
+
+  $("tab-entrar").onclick = () => trocarModo("entrar");
+  $("tab-criar").onclick = () => trocarModo("criar");
+
+  $("ver-senha").onclick = () => {
+    const s = $("senha");
+    const oculto = s.type === "password";
+    s.type = oculto ? "text" : "password";
+    $("ver-senha").textContent = oculto ? "Ocultar" : "Mostrar";
+    $("ver-senha").setAttribute("aria-label", oculto ? "Ocultar senha" : "Mostrar senha");
+  };
+
+  function irParaPainel(user) {
+    const perfil = user && user.user_metadata && user.user_metadata.perfil;
+    window.location.href = DESTINOS[perfil] || DESTINOS.responsavel;
+  }
+
+  async function barrarDominioInvalido(user) {
+    const perfil = user && user.user_metadata && user.user_metadata.perfil;
+    if (perfil === "motorista" && !emailInstitucional(user.email)) {
+      await sb.auth.signOut();
+      mostrar(MSG_MOTORISTA, "error");
+      return true;
+    }
+    return false;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = $("email").value.trim().toLowerCase();
+    const senha = $("senha").value;
+
+    if (!emailValido(email)) return mostrar("Digite um e-mail válido.", "error");
+    if (modo === "criar" && perfilSelecionado() === "motorista" && !emailInstitucional(email)) return mostrar(MSG_MOTORISTA, "error");
+    if (senha.length < 6) return mostrar("A senha precisa ter pelo menos 6 caracteres.", "error");
+
+    enviar.disabled = true;
+    mostrar("");
+
+    try {
+      if (modo === "entrar") {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+        if (error) throw error;
+        if (await barrarDominioInvalido(data.user)) return;
+        mostrar("Tudo certo! Abrindo seu painel…", "ok");
+        irParaPainel(data.user);
+      } else {
+        const nome = $("nome").value.trim();
+        if (nome.length < 2) return mostrar("Digite seu nome completo.", "error");
+        const perfil = perfilSelecionado();
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password: senha,
+          options: { data: { nome, perfil }, emailRedirectTo: window.location.href }
+        });
+        if (error) throw error;
+        if (data.session) {
+          mostrar("Conta criada! Abrindo seu painel…", "ok");
+          irParaPainel(data.user);
+        } else {
+          mostrar("Conta criada. Enviamos um link de confirmação para o seu e-mail.", "ok");
+        }
+      }
+    } catch (err) {
+      mostrar(traduzir(err), "error");
+    } finally {
+      enviar.disabled = false;
+    }
+  });
+
+  $("esqueci").onclick = async () => {
+    const email = $("email").value.trim().toLowerCase();
+    if (!emailValido(email)) return mostrar("Digite seu e-mail acima e toque em Esqueci a senha.", "error");
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+    if (error) return mostrar(traduzir(error), "error");
+    mostrar("Enviamos um link para redefinir a senha no seu e-mail.", "ok");
+  };
+
+  $("google").onclick = async () => {
+    mostrar("");
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { prompt: "select_account" }
+      }
+    });
+    if (error) mostrar("Login com Google indisponível. Ative o provedor Google no painel do Supabase.", "error");
+  };
+
+  // Sessão existente (inclui retorno do Google): valida o domínio antes de entrar
+  sb.auth.getSession().then(async ({ data }) => {
+    if (data && data.session) {
+      if (await barrarDominioInvalido(data.session.user)) return;
+      irParaPainel(data.session.user);
+    }
+  });
+</script>
+</body>
+</html>
