@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rota Segura · Motorista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --green: #375534; --green-dark: #263c24; --tint: #eff4ee; --tint-2: #f6f9f5;
+    --ink: #1c2e1b; --ink-dim: #5d6f5b; --line: rgba(55, 85, 52, .16); --white: #fff;
+    --ok: #2f6b2a; --warn: #a86a00; --bad: #b3261e;
+    --ease: cubic-bezier(.22, .8, .24, 1);
+    --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: var(--font-body); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: radial-gradient(1000px 460px at 50% -10%, var(--tint), transparent 70%), var(--white);
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 18px 16px 48px; }
+  .barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 38px; height: 38px; border-radius: 12px; background: var(--green); display: grid; place-items: center; box-shadow: 0 8px 18px rgba(55, 85, 52, .28); }
+  .brand b { font-family: var(--font-display); font-size: 18px; color: var(--green-dark); }
+  .acoes { display: flex; gap: 8px; }
+  .mini {
+    display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 13px; text-decoration: none;
+    border: 1px solid var(--line); background: var(--white); color: var(--ink-dim); font-weight: 500; font-size: 14px; cursor: pointer;
+    transition: border-color .25s, color .25s;
+  }
+  .mini:hover { border-color: var(--green); color: var(--green); }
+
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(26px, 5vw, 32px); letter-spacing: -.02em; color: var(--green-dark); }
+  .sub { margin: 6px 0 20px; color: var(--ink-dim); font-size: 15px; line-height: 1.45; }
+
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 26px; padding: 22px; box-shadow: 0 14px 40px rgba(38, 60, 36, .07); margin-bottom: 18px; }
+  .card h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 17px; }
+
+  .topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 99px; font-size: 13.5px; font-weight: 600; background: var(--tint); color: var(--ink-dim); transition: background .3s, color .3s; }
+  .pill i { width: 9px; height: 9px; border-radius: 50%; background: #9aa89a; }
+  .pill[data-s="ao-vivo"] { background: #e6f4e4; color: var(--ok); }
+  .pill[data-s="ao-vivo"] i { background: var(--ok); animation: pisca 1.6s ease-in-out infinite; }
+  .pill[data-s="erro"] { background: #fdeceb; color: var(--bad); }
+  .pill[data-s="erro"] i { background: var(--bad); }
+  @keyframes pisca { 50% { opacity: .3; } }
+
+  .grande {
+    width: 100%; padding: 20px 18px; border: 0; border-radius: 22px; cursor: pointer;
+    font: 700 19px var(--font-display); letter-spacing: -.01em;
+    background: var(--green); color: var(--white); box-shadow: 0 14px 30px rgba(55, 85, 52, .32);
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: background .3s var(--ease), transform .15s, box-shadow .3s;
+  }
+  .grande:hover { background: var(--green-dark); }
+  .grande:active { transform: translateY(1px); }
+  .grande[disabled] { opacity: .6; cursor: progress; }
+  .grande.parar { background: var(--white); color: var(--bad); border: 2px solid rgba(179, 38, 30, .4); box-shadow: none; }
+  .grande.parar:hover { background: #fdeceb; }
+
+  .msg { min-height: 22px; margin: 14px 2px 0; font-size: 14px; line-height: 1.45; color: var(--ink-dim); }
+  .msg.erro { color: var(--bad); }
+  .msg.ok { color: var(--ok); }
+
+  .metricas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+  .metrica { padding: 12px; border-radius: 16px; background: var(--tint-2); border: 1px solid var(--line); }
+  .metrica span { display: block; font-size: 12px; color: var(--ink-dim); }
+  .metrica b { font-size: 16px; }
+
+  .mapa-box { padding: 0; overflow: hidden; position: relative; z-index: 0; isolation: isolate; height: 340px; }
+  #mapa { width: 100%; height: 100%; background: var(--tint); }
+  .centralizar { position: absolute; right: 12px; bottom: 12px; z-index: 500; box-shadow: 0 6px 16px rgba(38, 60, 36, .2); }
+  .pin { background: none; border: 0; }
+  .pin-bus { position: relative; width: 40px; height: 40px; border-radius: 14px; background: var(--green); border: 2px solid #fff; display: grid; place-items: center; box-shadow: 0 8px 18px rgba(38, 60, 36, .4); }
+  .pin-bus .pulso { position: absolute; inset: -7px; border-radius: 19px; border: 2px solid var(--green); opacity: 0; animation: ping 2s ease-out infinite; }
+  @keyframes ping { 0% { transform: scale(.8); opacity: .7; } 100% { transform: scale(1.3); opacity: 0; } }
+  .pin-escola { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 3px solid var(--green); display: grid; place-items: center; box-shadow: 0 8px 18px rgba(38, 60, 36, .35); }
+  .leaflet-container { font-family: var(--font-body); }
+
+  .dicas { margin: 10px 0 0; padding-left: 18px; color: var(--ink-dim); font-size: 14px; line-height: 1.6; }
+  .restrito { text-align: center; padding: 34px 22px; }
+  .restrito b { display: block; font-family: var(--font-display); font-size: 22px; color: var(--green-dark); margin-bottom: 8px; }
+  .restrito p { margin: 0 0 18px; color: var(--ink-dim); line-height: 1.5; }
+  .btn { display: inline-block; padding: 12px 20px; border-radius: 14px; background: var(--green); color: var(--white); font-weight: 600; text-decoration: none; }
+
+  @media (max-width: 560px) { .metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mapa-box { height: 300px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="barra">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect x="5" y="6" width="22" height="16" rx="4" stroke="#fff" stroke-width="2.2"/><path d="M5 14h22" stroke="#fff" stroke-width="2.2"/><circle cx="11" cy="18" r="1.4" fill="#fff"/><circle cx="21" cy="18" r="1.4" fill="#fff"/><path d="M9 22v3M23 22v3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+      <b>Rota Segura</b>
+    </div>
+    <div class="acoes">
+      <a class="mini" href="dashboard.html">Painel</a>
+      <button class="mini" type="button" id="sair">Sair</button>
+    </div>
+  </div>
+
+  <h1 id="ola">Página do motorista</h1>
+  <p class="sub">Compartilhe sua localização para que os responsáveis acompanhem o ônibus até o colégio.</p>
+
+  <!-- Sem permissão -->
+  <section class="card restrito" id="restrito" hidden>
+    <b>Área do motorista</b>
+    <p>Esta página é para motoristas. Se você é responsável, acompanhe o ônibus pelo mapa do painel.</p>
+    <a class="btn" href="dashboard.html">Voltar ao painel</a>
+  </section>
+
+  <div id="app" hidden>
+    <section class="card" aria-label="Compartilhamento de localização">
+      <div class="topo">
+        <h2>Compartilhamento</h2>
+        <span class="pill" id="pill" data-s="parado"><i></i><span id="pill-txt">Parado</span></span>
+      </div>
+      <button class="grande" type="button" id="toggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        <span id="toggle-txt">Iniciar compartilhamento</span>
+      </button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <div class="metricas">
+        <div class="metrica"><span>Último envio</span><b id="m-envio">--</b></div>
+        <div class="metrica"><span>Velocidade</span><b id="m-vel">--</b></div>
+        <div class="metrica"><span>Precisão do GPS</span><b id="m-prec">--</b></div>
+        <div class="metrica"><span>Até o colégio</span><b id="m-dist">--</b></div>
+      </div>
+    </section>
+
+    <section class="card mapa-box" aria-label="Mapa">
+      <div id="mapa" role="application" aria-label="Mapa com a sua posição e o colégio"></div>
+      <button class="mini centralizar" type="button" id="centralizar">Centralizar</button>
+    </section>
+
+    <section class="card">
+      <h2>Para funcionar bem</h2>
+      <ul class="dicas">
+        <li>Mantenha esta página aberta e a tela ligada durante o trajeto. Ao bloquear o celular, o navegador pode parar o envio.</li>
+        <li>Permita o acesso à localização quando o navegador pedir.</li>
+        <li>Ponto final: <b>Colégio Estadual Presidente Roosevelt</b>, R. Mato Grosso, 111, Guaíra, PR.</li>
+        <li>Ao terminar o trajeto, toque em <b>Parar compartilhamento</b>.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  /* ===== Configuração ===== */
+  const SUPABASE_URL = "https://leekskdtvthqmgbwuvpi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZWtza2R0dnRocW1nYnd1dnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDEyMTgsImV4cCI6MjEwNjcxNzIxOH0.u8et6VHb3dxmnpVR1lD5-l7j9vcrqdT9YEMp5Cy2tb4";
+  const LOGIN_URL = "login.html";
+
+  // Se quiser fixar a posição exata do colégio, preencha: { lat: -24.0000, lng: -54.0000 }
+  const ESCOLA_FIXA = null;
+  const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.0845, lng: -54.2569, aproximado: false };
+
+  const INTERVALO_ENVIO = 5000;     // envia a cada 5 s
+  const INTERVALO_BATIMENTO = 10000; // se parado no trânsito, reenvia a última posição a cada 10 s
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
+
+  let user = null, nome = "Motorista";
+  let watchId = null, ativo = false, ultimaPos = null, ultimoEnvio = 0, enviando = false, batimento = null, wake = null;
+  let mapa = null, meuPin = null, ajustou = false;
+
+  function msg(t, tipo) { $("msg").textContent = t || ""; $("msg").className = "msg" + (tipo ? " " + tipo : ""); }
+  function estado(s, txt) { $("pill").dataset.s = s; $("pill-txt").textContent = txt; }
+
+  function distM(la1, lo1, la2, lo2) {
+    const R = 6371000, rad = Math.PI / 180, dLa = (la2 - la1) * rad, dLo = (lo2 - lo1) * rad;
+    const a = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * rad) * Math.cos(la2 * rad) * Math.sin(dLo / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  const fmtDist = (m) => m < 1000 ? Math.round(m) + " m" : (m / 1000).toFixed(1).replace(".", ",") + " km";
+
+  async function resolverEscola() {
+    try { const c = JSON.parse(localStorage.getItem("escola_coord") || "null"); if (c && c.lat) return c; } catch (_) {}
+    try {
+      const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=" + encodeURIComponent("Rua Mato Grosso 111, Guaíra, Paraná"));
+      const j = await r.json();
+      if (j[0]) {
+        const c = { lat: +j[0].lat, lng: +j[0].lon };
+        try { localStorage.setItem("escola_coord", JSON.stringify(c)); } catch (_) {}
+        return c;
+      }
+    } catch (_) {}
+    return { lat: -24.0845, lng: -54.2569, aproximado: true };
+  }
+
+  /* ===== Mapa ===== */
+  async function montarMapa() {
+    Object.assign(ESCOLA, ESCOLA_FIXA || await resolverEscola());
+    mapa = L.map("mapa").setView([ESCOLA.lat, ESCOLA.lng], 14);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapa);
+    L.marker([ESCOLA.lat, ESCOLA.lng], {
+      icon: L.divIcon({ className: "pin", iconSize: [40, 40], iconAnchor: [20, 20],
+        html: '<div class="pin-escola"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#375534" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 5h12l-2 4 2 4H5"/></svg></div>' })
+    }).addTo(mapa).bindPopup("<b>Ponto final</b><br>" + ESCOLA.nome + "<br>" + ESCOLA.endereco + (ESCOLA.aproximado ? "<br><i>posição aproximada</i>" : ""));
+    setTimeout(() => mapa.invalidateSize(), 80);
+  }
+  function desenharMeuPin(lat, lng) {
+    if (!mapa) return;
+    if (!meuPin) {
+      meuPin = L.marker([lat, lng], { zIndexOffset: 1000, icon: L.divIcon({ className: "pin", iconSize: [40, 40], iconAnchor: [20, 20],
+        html: '<div class="pin-bus"><span class="pulso"></span><svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect x="5" y="6" width="22" height="16" rx="4" stroke="#fff" stroke-width="2.4"/><path d="M5 14h22" stroke="#fff" stroke-width="2.4"/><circle cx="11" cy="18" r="1.5" fill="#fff"/><circle cx="21" cy="18" r="1.5" fill="#fff"/><path d="M9 22v3M23 22v3" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>' }) }).addTo(mapa);
+    } else meuPin.setLatLng([lat, lng]);
+    if (!ajustou) { centralizar(); ajustou = true; }
+  }
+  function centralizar() {
+    if (!mapa) return;
+    if (ultimaPos) mapa.fitBounds(L.latLngBounds([[ultimaPos.coords.latitude, ultimaPos.coords.longitude], [ESCOLA.lat, ESCOLA.lng]]).pad(0.3));
+    else mapa.setView([ESCOLA.lat, ESCOLA.lng], 14);
+  }
+  $("centralizar").onclick = centralizar;
+
+  /* ===== Envio da localização ===== */
+  async function enviar(p) {
+    if (enviando || !user) return;
+    enviando = true;
+    try {
+      const c = p.coords;
+      const { error } = await sb.from("localizacoes").upsert({
+        motorista_id: user.id,
+        nome,
+        lat: c.latitude,
+        lng: c.longitude,
+        velocidade: c.speed != null && !isNaN(c.speed) ? c.speed * 3.6 : null,
+        direcao: c.heading != null && !isNaN(c.heading) ? c.heading : null,
+        precisao: c.accuracy,
+        atualizado_em: new Date().toISOString()
+      });
+      if (error) throw error;
+      ultimoEnvio = Date.now();
+      if (ativo) { estado("ao-vivo", "Ao vivo"); msg("Localização sendo compartilhada.", "ok"); }
+    } catch (e) {
+      console.warn("Envio:", e.message || e);
+      if (ativo) { estado("erro", "Sem conexão"); msg("Não foi possível enviar agora. Tentando novamente…", "erro"); }
+    } finally { enviando = false; }
+  }
+
+  function aoReceberPosicao(p) {
+    ultimaPos = p;
+    const c = p.coords;
+    $("m-vel").textContent = c.speed != null && !isNaN(c.speed) ? Math.round(c.speed * 3.6) + " km/h" : "0 km/h";
+    $("m-prec").textContent = "±" + Math.round(c.accuracy) + " m";
+    $("m-dist").textContent = fmtDist(distM(c.latitude, c.longitude, ESCOLA.lat, ESCOLA.lng));
+    desenharMeuPin(c.latitude, c.longitude);
+    if (Date.now() - ultimoEnvio >= INTERVALO_ENVIO) enviar(p);
+  }
+
+  function aoFalhar(e) {
+    const txt = {
+      1: "Permissão de localização negada. Libere o acesso nas configurações do navegador e tente de novo.",
+      2: "Não foi possível obter sua posição. Verifique se o GPS está ligado.",
+      3: "O GPS demorou para responder. Tentando de novo…"
+    }[e.code] || "Erro ao obter a localização.";
+    msg(txt, "erro");
+    if (e.code === 1) parar(true);
+    else if (ativo) estado("erro", "Sem sinal de GPS");
+  }
+
+  async function manterTelaLigada() {
+    try {
+      if ("wakeLock" in navigator) {
+        wake = await navigator.wakeLock.request("screen");
+        wake.addEventListener("release", () => { wake = null; });
+      }
+    } catch (_) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && ativo && !wake) manterTelaLigada(); });
+
+  function iniciar() {
+    if (!("geolocation" in navigator)) return msg("Este aparelho não oferece localização.", "erro");
+    if (!window.isSecureContext) return msg("A localização exige conexão segura (HTTPS). Abra o site pelo endereço https.", "erro");
+    ativo = true; ultimoEnvio = 0;
+    $("toggle").classList.add("parar");
+    $("toggle-txt").textContent = "Parar compartilhamento";
+    estado("erro", "Procurando GPS…");
+    msg("Buscando sua posição…");
+    watchId = navigator.geolocation.watchPosition(aoReceberPosicao, aoFalhar, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+    batimento = setInterval(() => { if (ultimaPos && Date.now() - ultimoEnvio >= INTERVALO_BATIMENTO) enviar(ultimaPos); }, 3000);
+    manterTelaLigada();
+  }
+
+  async function parar(silencioso) {
+    ativo = false;
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    clearInterval(batimento);
+    if (wake) { try { await wake.release(); } catch (_) {} wake = null; }
+    $("toggle").classList.remove("parar");
+    $("toggle-txt").textContent = "Iniciar compartilhamento";
+    estado("parado", "Parado");
+    try { await sb.from("localizacoes").delete().eq("motorista_id", user.id); } catch (_) {}
+    if (!silencioso) msg("Compartilhamento encerrado. O ônibus saiu do mapa dos responsáveis.");
+  }
+
+  $("toggle").onclick = () => { if (ativo) parar(); else iniciar(); };
+
+  // Atualiza "Último envio" sem precisar de novo dado
+  setInterval(() => {
+    if (!ativo || !ultimoEnvio) { if (!ativo) $("m-envio").textContent = "--"; return; }
+    const s = Math.round((Date.now() - ultimoEnvio) / 1000);
+    $("m-envio").textContent = s < 60 ? "há " + s + " s" : "há " + Math.round(s / 60) + " min";
+  }, 1000);
+
+  /* ===== Sessão e permissão ===== */
+  $("sair").onclick = async () => { if (ativo) await parar(true); await sb.auth.signOut(); window.location.href = LOGIN_URL; };
+  window.addEventListener("beforeunload", () => { if (ativo) navigator.geolocation.clearWatch(watchId); });
+
+  (async function start() {
+    const { data } = await sb.auth.getSession();
+    if (!data || !data.session) { window.location.href = LOGIN_URL; return; }
+    user = data.session.user;
+    const meta = user.user_metadata || {};
+    nome = meta.nome || (user.email || "").split("@")[0];
+    let role = "responsavel";
+    try {
+      const { data: p } = await sb.from("perfis").select("nome, role").eq("id", user.id).maybeSingle();
+      if (p) { nome = p.nome || nome; role = p.role || role; }
+    } catch (_) {}
+
+    // Sem verificação por enquanto: motorista (mesmo em verificação) ou administrador podem compartilhar
+    const permitido = role === "motorista" || role === "administrador" || meta.perfil === "motorista";
+    if (!permitido) { $("restrito").hidden = false; return; }
+
+    $("ola").textContent = "Olá, " + nome.split(" ")[0];
+    $("app").hidden = false;
+    await montarMapa();
+  })();
+</script>
+</body>
+</html>
