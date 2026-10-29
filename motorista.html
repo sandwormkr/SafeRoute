@@ -177,6 +177,7 @@
 
   let user = null, nome = "Motorista";
   let watchId = null, ativo = false, ultimaPos = null, ultimoEnvio = 0, enviando = false, batimento = null, wake = null;
+  let viagemId = null, ancora = null;
   let mapa = null, meuPin = null, ajustou = false;
 
   function msg(t, tipo) { $("msg").textContent = t || ""; $("msg").className = "msg" + (tipo ? " " + tipo : ""); }
@@ -229,6 +230,33 @@
   }
   $("centralizar").onclick = centralizar;
 
+  /* ===== Viagem e detecção de veículo parado ===== */
+  // Se o ônibus ficar menos de 40 m (ou a precisão do GPS) por 3 min no mesmo lugar, marca "parado desde"
+  function calcularParado(c) {
+    const agora = Date.now(), raio = Math.max(40, c.accuracy || 0);
+    if (!ancora || distM(c.latitude, c.longitude, ancora.lat, ancora.lng) > raio) {
+      ancora = { lat: c.latitude, lng: c.longitude, t: agora };
+      return null;
+    }
+    return agora - ancora.t >= 3 * 60 * 1000 ? new Date(ancora.t).toISOString() : null;
+  }
+
+  // Liga a viagem à rota cujo horário de partida está mais próximo de agora
+  async function abrirViagem() {
+    try {
+      const { data: rs } = await sb.from("rotas").select("id, partida").eq("motorista_id", user.id).eq("ativa", true);
+      const n = new Date(), min = n.getHours() * 60 + n.getMinutes();
+      let rota = null, melhor = Infinity;
+      (rs || []).forEach(r => {
+        const [h, m] = r.partida.split(":");
+        const d = Math.abs((+h) * 60 + (+m) - min);
+        if (d < melhor) { melhor = d; rota = r.id; }
+      });
+      const { data, error } = await sb.from("viagens").insert({ motorista_id: user.id, nome, rota_id: rota }).select("id").single();
+      if (!error) viagemId = data.id;
+    } catch (e) { console.warn("Viagem:", e.message || e); }
+  }
+
   /* ===== Envio da localização ===== */
   async function enviar(p) {
     if (enviando || !user) return;
@@ -243,6 +271,7 @@
         velocidade: c.speed != null && !isNaN(c.speed) ? c.speed * 3.6 : null,
         direcao: c.heading != null && !isNaN(c.heading) ? c.heading : null,
         precisao: c.accuracy,
+        parado_desde: calcularParado(c),
         atualizado_em: new Date().toISOString()
       });
       if (error) throw error;
@@ -288,7 +317,8 @@
   function iniciar() {
     if (!("geolocation" in navigator)) return msg("Este aparelho não oferece localização.", "erro");
     if (!window.isSecureContext) return msg("A localização exige conexão segura (HTTPS). Abra o site pelo endereço https.", "erro");
-    ativo = true; ultimoEnvio = 0;
+    ativo = true; ultimoEnvio = 0; ancora = null;
+    abrirViagem();
     $("toggle").classList.add("parar");
     $("toggle-txt").textContent = "Parar compartilhamento";
     estado("erro", "Procurando GPS…");
@@ -307,8 +337,16 @@
     $("toggle").classList.remove("parar");
     $("toggle-txt").textContent = "Iniciar compartilhamento";
     estado("parado", "Parado");
+    let chegou = false;
+    if (viagemId) {
+      chegou = !!ultimaPos && distM(ultimaPos.coords.latitude, ultimaPos.coords.longitude, ESCOLA.lat, ESCOLA.lng) < 400;
+      try { await sb.from("viagens").update({ finalizada_em: new Date().toISOString(), chegou }).eq("id", viagemId); } catch (_) {}
+      viagemId = null;
+    }
     try { await sb.from("localizacoes").delete().eq("motorista_id", user.id); } catch (_) {}
-    if (!silencioso) msg("Compartilhamento encerrado. O ônibus saiu do mapa dos responsáveis.");
+    if (!silencioso) msg(chegou
+      ? "Viagem concluída no colégio. Bom trabalho!"
+      : "Compartilhamento encerrado longe do colégio: esta viagem não conta como concluída.");
   }
 
   $("toggle").onclick = () => { if (ativo) parar(); else iniciar(); };

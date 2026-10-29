@@ -236,6 +236,64 @@
   .pin-escola { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 3px solid var(--green); display: grid; place-items: center; box-shadow: 0 8px 18px rgba(38, 60, 36, .35); }
   .leaflet-container { font-family: var(--font-body); }
 
+
+  /* Home: frota, avisos, partidas, chamados, atalhos */
+  .col { display: grid; gap: 20px; align-content: start; min-width: 0; }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .tile { padding: 16px; border-radius: 20px; background: var(--tint-2); border: 1px solid var(--line); transition: background .3s, border-color .3s; }
+  .tile b { display: block; font-family: var(--font-display); font-size: 36px; letter-spacing: -.02em; line-height: 1.05; }
+  .tile span { font-size: 13.5px; color: var(--ink-dim); }
+  .tile[data-k="rota"] b { color: var(--green); }
+  .tile[data-k="parado"][data-alerta="1"] { background: #fff3f2; border-color: rgba(179, 38, 30, .35); }
+  .tile[data-k="parado"][data-alerta="1"] b { color: var(--bad); }
+  .tile[data-k="atraso"][data-alerta="1"] { background: #fff8e8; border-color: rgba(168, 106, 0, .4); }
+  .tile[data-k="atraso"][data-alerta="1"] b { color: var(--warn); }
+  .motivos li.al-bad { background: #fff3f2; border-color: rgba(179, 38, 30, .3); color: var(--bad); }
+  .motivos li.al-warn { background: #fff8e8; border-color: rgba(168, 106, 0, .35); color: var(--warn); }
+  .motivos li.al-ok { background: #e9f5e7; border-color: rgba(47, 107, 42, .3); color: var(--ok); }
+  .chip { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--tint); color: var(--ink-dim); white-space: nowrap; }
+  .chip.ok { background: #e6f4e4; color: var(--ok); } .chip.bad { background: #fdeceb; color: var(--bad); }
+  .chip.warn { background: #fff3d6; color: var(--warn); } .chip.info { background: var(--tint); color: var(--green); }
+  .grow { flex: 1; min-width: 0; }
+  .avisos { display: grid; gap: 10px; max-height: 380px; overflow: auto; }
+  .aviso-item { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 16px; background: var(--tint-2); border: 1px solid var(--line); border-left: 5px solid var(--green-soft); }
+  .aviso-item[data-nivel="atencao"] { border-left-color: var(--warn); background: #fffaf0; }
+  .aviso-item[data-nivel="urgente"] { border-left-color: var(--bad); background: #fff6f5; }
+  .aviso-item b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .aviso-item p { margin: 0 0 4px; font-size: 14px; line-height: 1.5; }
+  .aviso-item small { font-size: 12.5px; color: var(--ink-dim); }
+  .aviso-item .fechar { width: 30px; height: 30px; flex: none; }
+  .partidas { display: grid; gap: 10px; }
+  .partida { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--tint-2); border: 1px solid var(--line); }
+  .partida.prox { border-color: var(--green); background: var(--tint); }
+  .partida.feita { opacity: .6; }
+  .hora-p { font-family: var(--font-display); font-size: 20px; min-width: 58px; }
+  .acoes-linha { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .atalhos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .atalho { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--tint-2); cursor: pointer; font-weight: 600; font-size: 14px; text-align: left; transition: border-color .25s, background .25s; }
+  .atalho:hover { border-color: var(--green); background: var(--tint); }
+  .nav-grupo { margin: 16px 14px 4px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
+  .side { overflow-y: auto; }
+
+  /* Formulários e listas de gestão */
+  .form-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: end; }
+  .fld { display: grid; gap: 6px; font-size: 12.5px; color: var(--ink-dim); }
+  .fld input, .fld select, .fld textarea { width: 100%; padding: 11px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--tint-2); font: 500 15px var(--font-body); color: var(--ink); outline: 0; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--green); background: var(--white); box-shadow: 0 0 0 4px rgba(55, 85, 52, .12); }
+  .fld textarea { resize: vertical; min-height: 84px; }
+  .linha { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 16px; background: var(--tint-2); border: 1px solid var(--line); }
+  .linha .nome { font-weight: 600; font-size: 15px; }
+  .linha .turma { font-size: 13px; color: var(--ink-dim); }
+  .lista-g { display: grid; gap: 10px; margin-top: 14px; }
+  .pessoa .sub { flex-basis: 100%; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pessoa .sub select { padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); font: 500 14px var(--font-body); color: var(--ink); }
+  .tut { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border-radius: 99px; background: var(--tint); font-size: 13px; }
+  .tut button { border: 0; background: transparent; cursor: pointer; font-size: 16px; line-height: 1; color: var(--ink-dim); padding: 2px 6px; }
+  .btn.peq { padding: 8px 14px; font-size: 13.5px; border-radius: 12px; box-shadow: none; }
+  .dlg-form { padding: 8px 24px 24px; display: grid; gap: 12px; }
+  .erro-f { min-height: 18px; font-size: 13.5px; color: var(--bad); }
+  .espaco { margin-top: 20px; }
+
   /* ===== Celular: barra inferior ===== */
   @media (max-width: 820px) {
     .app { display: block; padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
@@ -248,6 +306,9 @@
     .nav { grid-auto-flow: column; grid-auto-columns: 1fr; flex: 1; }
     .nav button { flex-direction: column; gap: 4px; padding: 8px 6px; font-size: 12.5px; text-align: center; justify-content: center; }
     .nav small { display: none; }
+    .nav { overflow-x: auto; grid-auto-columns: minmax(76px, 1fr); }
+    .nav-grupo { display: none; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .side-foot { margin: 0 0 0 8px; }
     .sair { padding: 10px; font-size: 0; gap: 0; }
     .main { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
@@ -289,6 +350,19 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 14.5V21M9.6 11.2L3.4 9.8M14.4 11.2l6.2-1.4"/></svg>
         Motorista
       </button>
+      <div class="nav-grupo gestao" hidden>Gestão</div>
+      <button type="button" class="gestao" data-view="rotas" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/></svg>
+        Rotas
+      </button>
+      <button type="button" class="gestao" data-view="escolas" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6M5 10v9h14v-9M9 19v-5h6v5"/></svg>
+        Escolas
+      </button>
+      <button type="button" class="gestao" data-view="pessoas" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>
+        Responsáveis
+      </button>
     </nav>
 
     <div class="side-foot">
@@ -318,6 +392,18 @@
     <!-- HOME -->
     <section id="view-home" class="view">
       <div class="grid">
+        <article class="card full" id="card-frota" aria-label="Status da frota">
+          <h2>Status da frota</h2>
+          <p class="legenda" id="f-legenda">Carregando…</p>
+          <div class="tiles">
+            <div class="tile" data-k="rota"><b id="f-rota">0</b><span>Em rota</span></div>
+            <div class="tile" data-k="fim"><b id="f-fim">0</b><span>Concluídas hoje</span></div>
+            <div class="tile" data-k="parado" id="tile-parado" data-alerta="0"><b id="f-parado">0</b><span>Parados</span></div>
+            <div class="tile" data-k="atraso" id="tile-atraso" data-alerta="0"><b id="f-atraso">0</b><span>Com atraso</span></div>
+          </div>
+          <ul class="motivos" id="f-alertas"></ul>
+        </article>
+
         <article class="card clima" id="card-clima" aria-label="Clima em Guaíra, PR">
           <div class="local">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
@@ -351,7 +437,43 @@
           <p class="aviso-risco">Estimativa automática. Não substitui avisos da escola, da Defesa Civil ou o bom senso do motorista.</p>
         </article>
 
-        <article class="card full" id="card-alunos" aria-label="Tutelados">
+        <article class="card" id="card-avisos" aria-label="Avisos urgentes">
+          <div class="cab">
+            <div><h2>Avisos urgentes</h2><p class="legenda">Da escola, dos motoristas e do clima.</p></div>
+            <button class="btn sec" type="button" id="novo-aviso" hidden>Novo aviso</button>
+          </div>
+          <div class="avisos" id="av-lista"></div>
+        </article>
+
+        <div class="col">
+          <article class="card" id="card-chamados" aria-label="Ocorrências e chamados">
+            <h2>Ocorrências e chamados</h2>
+            <p class="legenda" id="ch-legenda"></p>
+            <div class="nivel"><b id="ch-num">0</b><span id="ch-txt">ocorrências abertas</span></div>
+            <div class="acoes-linha">
+              <button class="btn" type="button" id="novo-chamado">Abrir chamado</button>
+              <button class="btn sec" type="button" id="ver-chamados">Ver chamados</button>
+            </div>
+          </article>
+          <article class="card" id="card-atalhos" hidden aria-label="Atalhos de gestão">
+            <h2>Atalhos de gestão</h2>
+            <p class="legenda">Acesso rápido para administradores.</p>
+            <div class="atalhos">
+              <button class="atalho" type="button" data-ir="rotas">Rotas</button>
+              <button class="atalho" type="button" data-ir="escolas">Escolas</button>
+              <button class="atalho" type="button" data-ir="pessoas">Responsáveis</button>
+              <button class="atalho" type="button" id="atalho-alunos">Alunos</button>
+            </div>
+          </article>
+        </div>
+
+        <article class="card" id="card-partidas" aria-label="Próximas partidas">
+          <h2>Próximas partidas</h2>
+          <p class="legenda">Horários das rotas de hoje.</p>
+          <div class="partidas" id="p-lista"></div>
+        </article>
+
+        <article class="card" id="card-alunos" aria-label="Tutelados">
           <div class="cab">
             <div>
               <h2 id="a-titulo">Seus tutelados</h2>
@@ -383,6 +505,57 @@
         </aside>
       </div>
     </section>
+
+    <!-- GESTÃO: ROTAS -->
+    <section id="view-rotas" class="view" hidden>
+      <article class="card">
+        <h2>Nova rota</h2>
+        <p class="legenda">Os horários aparecem em "Próximas partidas" e definem o que conta como atraso.</p>
+        <form id="f-rota" class="form-grade">
+          <label class="fld">Nome<input id="rt-nome" required placeholder="Centro – Colégio"></label>
+          <label class="fld">Sentido<select id="rt-sentido"><option value="ida">Ida (casas → colégio)</option><option value="volta">Volta (colégio → casas)</option></select></label>
+          <label class="fld">Partida<input id="rt-partida" type="time" required></label>
+          <label class="fld">Chegada<input id="rt-chegada" type="time"></label>
+          <label class="fld">Motorista<select id="rt-motorista"><option value="">Sem motorista</option></select></label>
+          <button class="btn" type="submit">Adicionar rota</button>
+        </form>
+        <div class="erro-f" id="rt-erro"></div>
+      </article>
+      <article class="card espaco"><h2>Rotas cadastradas</h2><div class="lista-g" id="rt-lista"></div></article>
+    </section>
+
+    <!-- GESTÃO: ESCOLAS -->
+    <section id="view-escolas" class="view" hidden>
+      <article class="card">
+        <h2>Nova escola atendida</h2>
+        <form id="f-escola" class="form-grade">
+          <label class="fld">Nome<input id="es-nome" required placeholder="Colégio Estadual…"></label>
+          <label class="fld">Endereço<input id="es-end" placeholder="R. Mato Grosso, 111"></label>
+          <button class="btn" type="submit">Adicionar escola</button>
+        </form>
+        <div class="erro-f" id="es-erro"></div>
+      </article>
+      <article class="card espaco"><h2>Escolas atendidas</h2><div class="lista-g" id="es-lista"></div></article>
+    </section>
+
+    <!-- GESTÃO: RESPONSÁVEIS -->
+    <section id="view-pessoas" class="view" hidden>
+      <article class="card">
+        <h2>Cadastrar aluno</h2>
+        <form id="f-aluno" class="form-grade">
+          <label class="fld">Nome do aluno<input id="al-nome" required></label>
+          <label class="fld">Turma<input id="al-turma" placeholder="5º ano A"></label>
+          <button class="btn" type="submit">Cadastrar</button>
+        </form>
+        <div class="erro-f" id="al-erro"></div>
+      </article>
+      <article class="card espaco">
+        <h2>Responsáveis e usuários</h2>
+        <p class="legenda">Vincule alunos aos responsáveis e defina o cargo de cada pessoa.</p>
+        <label class="fld"><input id="ps-busca" type="search" placeholder="Buscar por nome ou e-mail" aria-label="Buscar usuário"></label>
+        <div class="lista-g" id="ps-lista"></div>
+      </article>
+    </section>
   </div>
 </div>
 
@@ -394,6 +567,31 @@
   </div>
   <div class="dlg-busca"><input type="search" id="dlg-busca" placeholder="Buscar por nome ou turma" aria-label="Buscar aluno"></div>
   <div class="dlg-lista" id="dlg-lista"></div>
+</dialog>
+
+<dialog id="dlg-aviso" aria-labelledby="dlg-av-t">
+  <div class="dlg-topo"><h2 id="dlg-av-t">Novo aviso</h2><button class="fechar" type="button" data-fechar="dlg-aviso" aria-label="Fechar">×</button></div>
+  <form class="dlg-form" id="f-aviso">
+    <label class="fld">Título<input id="av-titulo" required maxlength="90" placeholder="Ex.: Desvio na R. Mato Grosso por obras"></label>
+    <label class="fld">Mensagem<textarea id="av-msg" maxlength="400" placeholder="Detalhes (opcional)"></textarea></label>
+    <div class="form-grade">
+      <label class="fld">Nível<select id="av-nivel"><option value="info">Informativo</option><option value="atencao">Atenção</option><option value="urgente">Urgente</option></select></label>
+      <label class="fld">Fica visível por<select id="av-validade"><option value="6">6 horas</option><option value="24" selected>24 horas</option><option value="72">3 dias</option></select></label>
+    </div>
+    <div class="erro-f" id="av-erro"></div>
+    <button class="btn" type="submit">Publicar aviso</button>
+  </form>
+</dialog>
+
+<dialog id="dlg-chamados" aria-labelledby="dlg-ch-t">
+  <div class="dlg-topo"><h2 id="dlg-ch-t">Chamados</h2><button class="fechar" type="button" data-fechar="dlg-chamados" aria-label="Fechar">×</button></div>
+  <form class="dlg-form" id="f-chamado">
+    <label class="fld">Assunto<input id="dc-assunto" required maxlength="90" placeholder="Ex.: Dúvida sobre o horário da rota"></label>
+    <label class="fld">Detalhes<textarea id="dc-msg" maxlength="500" placeholder="Conte o que aconteceu"></textarea></label>
+    <div class="erro-f" id="dc-erro"></div>
+    <button class="btn" type="submit">Enviar chamado</button>
+  </form>
+  <div class="dlg-lista" id="dc-lista"></div>
 </dialog>
 
 <script>
@@ -424,7 +622,7 @@
   const iniciais = (nome) => (nome || "?").trim().split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
 
   /* ===== Navegação ===== */
-  const TITULOS = { home: "Home", maps: "Maps" };
+  const TITULOS = { home: "Home", maps: "Maps", rotas: "Rotas", escolas: "Escolas", pessoas: "Responsáveis" };
   function irPara(view) {
     document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "view-" + view);
     document.querySelectorAll(".nav button").forEach(b => {
@@ -432,6 +630,11 @@
     });
     $("titulo").textContent = TITULOS[view];
     if (view === "maps" && state.pronto) abrirMapa();
+    if (state.role === "administrador") {
+      if (view === "rotas") carregarRotasAdmin();
+      if (view === "escolas") carregarEscolasAdmin();
+      if (view === "pessoas") carregarPessoas();
+    }
   }
   document.querySelectorAll(".nav button[data-view]").forEach(b => b.addEventListener("click", () => irPara(b.dataset.view)));
   $("nav-motorista").onclick = () => { window.location.href = "motorista.html"; };
@@ -502,6 +705,7 @@
 
   function mostrarRisco(r) {
     $("card-risco").dataset.nivel = r.nivel;
+    state.risco = r; desenharAvisos();
     $("r-nivel").textContent = { baixo: "Baixo", moderado: "Moderado", alto: "Alto" }[r.nivel];
     $("r-score").textContent = "índice " + r.pts + " de 100";
     const ul = $("r-motivos"); ul.replaceChildren();
@@ -581,6 +785,11 @@
     // Sem verificação por enquanto: quem se cadastrou como motorista já pode compartilhar a localização
     state.papel = role !== "responsavel" ? role : (meta.perfil === "motorista" ? "motorista" : "responsavel");
     $("nav-motorista").hidden = state.papel === "responsavel";
+    state.nome = nome;
+    const admin = state.role === "administrador";
+    document.querySelectorAll(".gestao").forEach(n => { n.hidden = !admin; });
+    $("card-atalhos").hidden = !admin;
+    $("novo-aviso").hidden = !(admin || state.role === "motorista");
     $("u-nome").textContent = nome;
     $("u-role").textContent = rotulo;
     $("avatar").textContent = iniciais(nome);
@@ -881,6 +1090,315 @@
     desenharPainel();
   }
 
+  /* ===== Home: frota, partidas, avisos e chamados ===== */
+  const HOME = { rotas: [], viagens: [], loc: [], rotasT: 0, avisos: [], chamados: [] };
+  const ROT = { agendada: ["Agendada", ""], em_rota: ["Em rota", "ok"], concluida: ["Concluída", "info"], atrasada: ["Atrasada", "bad"] };
+  const STC = { aberto: ["Aberto", "warn"], em_andamento: ["Em andamento", "info"], resolvido: ["Resolvido", "ok"] };
+  const hhmm = (t) => (t || "").slice(0, 5);
+  const minDe = (t) => { const [h, m] = (t || "0:0").split(":"); return (+h) * 60 + (+m); };
+  const minAgora = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
+  const quando = (iso) => { const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000)); if (s < 60) return "agora"; if (s < 3600) return "há " + Math.round(s / 60) + " min"; if (s < 86400) return "há " + Math.round(s / 3600) + " h"; return "há " + Math.round(s / 86400) + " d"; };
+  const operacional = () => !(state.papel === "responsavel" && state.alunos.length === 0);
+  const rotaHoje = (r) => (r.dias || [1, 2, 3, 4, 5]).includes(new Date().getDay());
+  const chip = (txt, tipo) => el("span", "chip " + (tipo || ""), txt);
+
+  function statusRota(r) {
+    if (HOME.viagens.some(v => v.rota_id === r.id && v.finalizada_em && v.chegou)) return "concluida";
+    const loc = HOME.loc.find(b => b.motorista_id === r.motorista_id && idade(b) < ATIVO_MS);
+    const outraAberta = HOME.viagens.some(v => v.motorista_id === r.motorista_id && v.rota_id && v.rota_id !== r.id && !v.finalizada_em);
+    const min = minAgora();
+    if (loc && !outraAberta) {
+      const limite = r.chegada ? minDe(r.chegada) : minDe(r.partida) + 40;
+      return min > limite + 10 ? "atrasada" : "em_rota";
+    }
+    return min > minDe(r.partida) + 10 ? "atrasada" : "agendada";
+  }
+
+  async function carregarFrota() {
+    if (!operacional()) return;
+    if (!ESCOLA._ok) { Object.assign(ESCOLA, ESCOLA_FIXA || await resolverEscola()); ESCOLA._ok = true; }
+    const ini = new Date(); ini.setHours(0, 0, 0, 0);
+    const [l, v, r] = await Promise.all([
+      sb.from("localizacoes").select("*"),
+      sb.from("viagens").select("id,motorista_id,nome,rota_id,iniciada_em,finalizada_em,chegou").gte("iniciada_em", ini.toISOString()),
+      Date.now() - HOME.rotasT > 300000 ? sb.from("rotas").select("*").eq("ativa", true).order("partida") : Promise.resolve(null)
+    ]);
+    if (l.error && v.error) { $("f-legenda").textContent = "Dados da frota indisponíveis. Rode o SQL atualizado no Supabase."; }
+    if (!l.error) HOME.loc = l.data || [];
+    if (!v.error) HOME.viagens = v.data || [];
+    if (r && !r.error) { HOME.rotas = r.data || []; HOME.rotasT = Date.now(); }
+    desenharFrota(); desenharPartidas();
+  }
+
+  function desenharFrota() {
+    const ativos = HOME.loc.filter(b => idade(b) < ATIVO_MS);
+    const fim = HOME.viagens.filter(v => v.finalizada_em && v.chegou).length;
+    const parados = ativos.filter(b => b.parado_desde && distM(b.lat, b.lng, ESCOLA.lat, ESCOLA.lng) > 400);
+    const atrasadas = HOME.rotas.filter(rotaHoje).filter(r => statusRota(r) === "atrasada");
+    $("f-rota").textContent = ativos.length;
+    $("f-fim").textContent = fim;
+    $("f-parado").textContent = parados.length;
+    $("f-atraso").textContent = atrasadas.length;
+    $("tile-parado").dataset.alerta = parados.length ? "1" : "0";
+    $("tile-atraso").dataset.alerta = atrasadas.length ? "1" : "0";
+
+    const itens = [];
+    parados.forEach(b => itens.push(["bad", "Ônibus de " + (b.nome || "motorista") + " parado há " + Math.max(1, Math.round((Date.now() - new Date(b.parado_desde).getTime()) / 60000)) + " min"]));
+    atrasadas.forEach(r => itens.push(["warn", r.nome + " (" + (r.sentido === "volta" ? "volta" : "ida") + ") atrasada · previsto " + hhmm(r.partida)]));
+    if (!itens.length) itens.push(["ok", "Tudo certo: nenhum veículo parado ou atrasado"]);
+    const ul = $("f-alertas"); ul.replaceChildren();
+    itens.slice(0, 4).forEach(([t, txt]) => ul.appendChild(el("li", "al-" + t, txt)));
+    if (itens.length > 4) ul.appendChild(el("li", null, "+" + (itens.length - 4) + " alertas"));
+    if (!l.error) $("f-legenda").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function desenharPartidas() {
+    const box = $("p-lista"); box.replaceChildren();
+    const rs = HOME.rotas.filter(rotaHoje).sort((a, b) => minDe(a.partida) - minDe(b.partida));
+    if (!rs.length) { box.appendChild(el("div", "dlg-vazio", state.role === "administrador" ? "Nenhuma rota para hoje. Cadastre em Rotas." : "Nenhuma rota cadastrada para hoje.")); return; }
+    let proxima = true;
+    rs.forEach(r => {
+      const st = statusRota(r);
+      const li = el("div", "partida" + (st === "concluida" ? " feita" : ""));
+      if (st !== "concluida" && proxima) { li.classList.add("prox"); proxima = false; }
+      li.appendChild(el("b", "hora-p", hhmm(r.partida)));
+      const t = el("div", "grow");
+      t.appendChild(el("div", "nome", r.nome));
+      t.appendChild(el("div", "turma", (r.sentido === "volta" ? "Colégio → casas" : "Casas → colégio") + (r.chegada ? " · chega " + hhmm(r.chegada) : "")));
+      li.appendChild(t);
+      li.appendChild(chip(ROT[st][0], ROT[st][1]));
+      box.appendChild(li);
+    });
+  }
+
+  /* --- Avisos --- */
+  async function carregarAvisos() {
+    const { data, error } = await sb.from("avisos").select("*").order("criado_em", { ascending: false }).limit(30);
+    const agora = Date.now();
+    HOME.avisos = error ? [] : (data || []).filter(a => a.expira_em ? new Date(a.expira_em).getTime() > agora : agora - new Date(a.criado_em).getTime() < 72 * 3600e3);
+    desenharAvisos();
+  }
+
+  function desenharAvisos() {
+    const box = $("av-lista"); if (!box) return; box.replaceChildren();
+    const itens = [];
+    const r = state.risco;
+    if (r && r.nivel !== "baixo") itens.push({
+      meteo: true, nivel: r.nivel === "alto" ? "urgente" : "atencao",
+      titulo: "Alerta de tempo: risco " + (r.nivel === "alto" ? "alto" : "moderado") + " para o trajeto",
+      mensagem: (r.nivel === "alto" ? "Evite deslocamentos desnecessários e acompanhe os avisos da escola. " : "Motoristas, redobrem a atenção. ") + "Motivos: " + r.motivos.join("; ") + ".",
+      autor_nome: "Clima · Guaíra"
+    });
+    HOME.avisos.forEach(a => itens.push(a));
+    if (!itens.length) { box.appendChild(el("div", "dlg-vazio", "Nenhum aviso no momento. Tudo tranquilo.")); return; }
+    itens.forEach(a => {
+      const it = el("div", "aviso-item"); it.dataset.nivel = a.nivel || "info";
+      const t = el("div", "grow");
+      t.appendChild(el("b", null, a.titulo));
+      if (a.mensagem) t.appendChild(el("p", null, a.mensagem));
+      t.appendChild(el("small", null, (a.autor_nome || "Escola") + " · " + (a.meteo ? "agora" : quando(a.criado_em))));
+      it.appendChild(t);
+      if (!a.meteo && (state.role === "administrador" || (state.user && a.autor_id === state.user.id))) {
+        const x = el("button", "fechar", "×"); x.type = "button"; x.setAttribute("aria-label", "Remover aviso");
+        x.onclick = async () => { await sb.from("avisos").delete().eq("id", a.id); carregarAvisos(); };
+        it.appendChild(x);
+      }
+      box.appendChild(it);
+    });
+  }
+
+  $("novo-aviso").onclick = () => { $("av-erro").textContent = ""; $("dlg-aviso").showModal(); };
+  $("f-aviso").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const titulo = $("av-titulo").value.trim(); if (!titulo) return;
+    const prefixo = state.role === "administrador" ? "Escola" : "Motorista";
+    const { error } = await sb.from("avisos").insert({
+      titulo, mensagem: $("av-msg").value.trim() || null, nivel: $("av-nivel").value,
+      autor_id: state.user.id, autor_nome: prefixo + " · " + state.nome,
+      expira_em: new Date(Date.now() + (+$("av-validade").value) * 3600e3).toISOString()
+    });
+    if (error) { $("av-erro").textContent = "Não foi possível publicar. Só administradores e motoristas verificados podem criar avisos."; return; }
+    e.target.reset(); $("dlg-aviso").close(); carregarAvisos();
+  });
+
+  /* --- Chamados --- */
+  async function carregarChamados() {
+    const { data, error } = await sb.from("chamados").select("*").order("criado_em", { ascending: false }).limit(100);
+    HOME.chamados = error ? [] : (data || []);
+    const abertos = HOME.chamados.filter(c => c.status !== "resolvido");
+    const andamento = abertos.filter(c => c.status === "em_andamento").length;
+    $("ch-num").textContent = abertos.length;
+    $("ch-txt").textContent = abertos.length === 1 ? "ocorrência aberta" : "ocorrências abertas";
+    $("ch-legenda").textContent = (state.role === "administrador" ? "Chamados de todos os usuários" : "Seus chamados com o suporte") + (andamento ? " · " + andamento + " em andamento" : "") + ".";
+    if ($("dlg-chamados").open) desenharChamados();
+  }
+
+  function desenharChamados() {
+    const box = $("dc-lista"); box.replaceChildren();
+    const admin = state.role === "administrador";
+    if (!HOME.chamados.length) { box.appendChild(el("div", "dlg-vazio", "Nenhum chamado ainda.")); return; }
+    HOME.chamados.forEach(c => {
+      const it = el("div", "linha");
+      const t = el("div", "grow");
+      t.appendChild(el("div", "nome", c.assunto));
+      if (c.mensagem) t.appendChild(el("div", "turma", c.mensagem));
+      t.appendChild(el("div", "turma", (admin ? (c.autor_nome || "Usuário") + " · " : "") + quando(c.criado_em)));
+      it.appendChild(t);
+      it.appendChild(chip(STC[c.status][0], STC[c.status][1]));
+      if (admin) {
+        const prox = c.status === "aberto" ? ["em_andamento", "Atender"] : c.status === "em_andamento" ? ["resolvido", "Resolver"] : ["aberto", "Reabrir"];
+        const b = el("button", "btn sec peq", prox[1]); b.type = "button";
+        b.onclick = async () => { await sb.from("chamados").update({ status: prox[0], atualizado_em: new Date().toISOString() }).eq("id", c.id); await carregarChamados(); };
+        it.appendChild(b);
+      }
+      box.appendChild(it);
+    });
+  }
+
+  const abrirChamados = () => { $("dc-erro").textContent = ""; desenharChamados(); $("dlg-chamados").showModal(); };
+  $("novo-chamado").onclick = abrirChamados;
+  $("ver-chamados").onclick = abrirChamados;
+  $("f-chamado").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const assunto = $("dc-assunto").value.trim(); if (!assunto) return;
+    const { error } = await sb.from("chamados").insert({ autor_id: state.user.id, autor_nome: state.nome, assunto, mensagem: $("dc-msg").value.trim() || null });
+    if (error) { $("dc-erro").textContent = "Não foi possível enviar o chamado. Tente novamente."; return; }
+    e.target.reset(); $("dc-erro").textContent = ""; await carregarChamados();
+  });
+
+  document.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => $(b.dataset.fechar).close()));
+  document.querySelectorAll("[data-ir]").forEach(b => b.addEventListener("click", () => irPara(b.dataset.ir)));
+  $("atalho-alunos").onclick = () => $("ver-todos").click();
+
+  /* ===== Gestão (administrador) ===== */
+  const vazioG = (box, txt) => box.appendChild(el("div", "dlg-vazio", txt));
+  function btnRemover(fn) {
+    const b = el("button", "btn sec peq", "Remover"); b.type = "button";
+    b.onclick = () => { if (confirm("Remover este item?")) fn(); };
+    return b;
+  }
+
+  async function carregarRotasAdmin() {
+    const [rs, ms] = await Promise.all([
+      sb.from("rotas").select("*").order("partida"),
+      sb.from("perfis").select("id,nome").eq("role", "motorista")
+    ]);
+    const motoristas = ms.data || [];
+    const sel = $("rt-motorista"), atual = sel.value;
+    sel.replaceChildren(new Option("Sem motorista", ""), ...motoristas.map(m => new Option(m.nome || "Sem nome", m.id)));
+    sel.value = atual;
+    const box = $("rt-lista"); box.replaceChildren();
+    if (rs.error) return vazioG(box, "Tabela de rotas não encontrada. Rode o SQL atualizado.");
+    if (!rs.data.length) return vazioG(box, "Nenhuma rota cadastrada ainda.");
+    rs.data.forEach(r => {
+      const m = motoristas.find(x => x.id === r.motorista_id);
+      const li = el("div", "linha");
+      const t = el("div", "grow");
+      t.appendChild(el("div", "nome", r.nome));
+      t.appendChild(el("div", "turma", (r.sentido === "volta" ? "Volta" : "Ida") + " · " + hhmm(r.partida) + (r.chegada ? " → " + hhmm(r.chegada) : "") + " · " + (m ? m.nome : "sem motorista")));
+      li.appendChild(t);
+      li.appendChild(btnRemover(async () => { await sb.from("rotas").delete().eq("id", r.id); HOME.rotasT = 0; carregarRotasAdmin(); }));
+      box.appendChild(li);
+    });
+  }
+  $("f-rota").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { error } = await sb.from("rotas").insert({
+      nome: $("rt-nome").value.trim(), sentido: $("rt-sentido").value, partida: $("rt-partida").value,
+      chegada: $("rt-chegada").value || null, motorista_id: $("rt-motorista").value || null
+    });
+    $("rt-erro").textContent = error ? "Não foi possível salvar a rota." : "";
+    if (!error) { e.target.reset(); HOME.rotasT = 0; carregarRotasAdmin(); }
+  });
+
+  async function carregarEscolasAdmin() {
+    const { data, error } = await sb.from("escolas").select("*").order("nome");
+    const box = $("es-lista"); box.replaceChildren();
+    if (error) return vazioG(box, "Tabela de escolas não encontrada. Rode o SQL atualizado.");
+    if (!data.length) return vazioG(box, "Nenhuma escola cadastrada.");
+    data.forEach(x => {
+      const li = el("div", "linha");
+      const t = el("div", "grow");
+      t.appendChild(el("div", "nome", x.nome));
+      if (x.endereco) t.appendChild(el("div", "turma", x.endereco));
+      li.appendChild(t);
+      li.appendChild(btnRemover(async () => { await sb.from("escolas").delete().eq("id", x.id); carregarEscolasAdmin(); }));
+      box.appendChild(li);
+    });
+  }
+  $("f-escola").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { error } = await sb.from("escolas").insert({ nome: $("es-nome").value.trim(), endereco: $("es-end").value.trim() || null });
+    $("es-erro").textContent = error ? "Não foi possível salvar a escola." : "";
+    if (!error) { e.target.reset(); carregarEscolasAdmin(); }
+  });
+
+  let PESSOAS = { ps: [], vs: [], as: [] };
+  async function carregarPessoas() {
+    const [ps, vs, as] = await Promise.all([
+      sb.from("perfis").select("id,nome,email,role").order("nome"),
+      sb.from("vinculos").select("responsavel_id, aluno_id, alunos(nome)"),
+      sb.from("alunos").select("id,nome,turma").order("nome")
+    ]);
+    PESSOAS = { ps: ps.data || [], vs: vs.data || [], as: as.data || [] };
+    desenharPessoas();
+  }
+  function desenharPessoas() {
+    const box = $("ps-lista"); box.replaceChildren();
+    const f = $("ps-busca").value.trim().toLowerCase();
+    const lista = PESSOAS.ps.filter(p => !f || (p.nome || "").toLowerCase().includes(f) || (p.email || "").toLowerCase().includes(f));
+    if (!lista.length) return vazioG(box, "Nenhum usuário encontrado.");
+    lista.forEach(p => {
+      const li = el("div", "linha pessoa");
+      li.appendChild(el("div", "avatar", iniciais(p.nome || p.email)));
+      const t = el("div", "grow");
+      t.appendChild(el("div", "nome", p.nome || "Sem nome"));
+      t.appendChild(el("div", "turma", p.email || ""));
+      li.appendChild(t);
+      const cargo = el("select"); cargo.setAttribute("aria-label", "Cargo");
+      [["responsavel", "Responsável"], ["motorista", "Motorista"], ["administrador", "Administrador"]].forEach(([v, n]) => cargo.appendChild(new Option(n, v)));
+      cargo.value = p.role; cargo.disabled = p.id === state.user.id;
+      cargo.onchange = async () => {
+        const { error } = await sb.from("perfis").update({ role: cargo.value }).eq("id", p.id);
+        if (error) { alert("Não foi possível alterar o cargo."); cargo.value = p.role; } else p.role = cargo.value;
+      };
+      li.appendChild(cargo);
+
+      const sub = el("div", "sub");
+      const meus = PESSOAS.vs.filter(v => v.responsavel_id === p.id);
+      meus.forEach(v => {
+        const c = el("span", "tut"); c.appendChild(document.createTextNode(v.alunos ? v.alunos.nome : "Aluno"));
+        const x = el("button", null, "×"); x.type = "button"; x.setAttribute("aria-label", "Desvincular aluno");
+        x.onclick = async () => { await sb.from("vinculos").delete().eq("responsavel_id", p.id).eq("aluno_id", v.aluno_id); carregarPessoas(); };
+        c.appendChild(x); sub.appendChild(c);
+      });
+      const livres = PESSOAS.as.filter(a => !meus.some(v => v.aluno_id === a.id));
+      if (livres.length) {
+        const sel = el("select"); sel.setAttribute("aria-label", "Aluno para vincular");
+        sel.appendChild(new Option("Vincular aluno…", ""));
+        livres.forEach(a => sel.appendChild(new Option(a.nome + (a.turma ? " · " + a.turma : ""), a.id)));
+        sel.onchange = async () => {
+          if (!sel.value) return;
+          const { error } = await sb.from("vinculos").insert({ responsavel_id: p.id, aluno_id: sel.value });
+          if (error) alert("Não foi possível vincular."); else carregarPessoas();
+        };
+        sub.appendChild(sel);
+      }
+      li.appendChild(sub);
+      box.appendChild(li);
+    });
+  }
+  $("ps-busca").addEventListener("input", desenharPessoas);
+  $("f-aluno").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { error } = await sb.from("alunos").insert({ nome: $("al-nome").value.trim(), turma: $("al-turma").value.trim() || null });
+    $("al-erro").textContent = error ? "Não foi possível cadastrar o aluno." : "";
+    if (!error) {
+      e.target.reset(); carregarPessoas();
+      state.alunos = await carregarAlunos(state.user); mostrarAlunos();
+    }
+  });
+
   /* ===== Sair ===== */
   $("sair").onclick = async () => { await sb.auth.signOut(); window.location.href = LOGIN_URL; };
   sb.auth.onAuthStateChange((evento) => { if (evento === "SIGNED_OUT") window.location.href = LOGIN_URL; });
@@ -900,6 +1418,13 @@
     state.user = user;
     state.pronto = true;
     if (!$("view-maps").hidden) abrirMapa();
+
+    const op = operacional();
+    $("card-frota").hidden = !op; $("card-partidas").hidden = !op;
+    carregarAvisos(); carregarChamados();
+    if (op) { carregarFrota(); setInterval(carregarFrota, 15000); }
+    setInterval(carregarAvisos, 60000); setInterval(carregarChamados, 60000);
+    sb.channel("avisos").on("postgres_changes", { event: "*", schema: "public", table: "avisos" }, () => carregarAvisos()).subscribe();
   })();
 </script>
 </body>
