@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BORDER EAGLES · INTEL BRIEF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --verde: #27d17c; --verde-dim: #1a8f54; --amarelo: #e8c547; --azul: #3a7bd5;
+    --bg: #05070a; --painel: #0a120d; --linha: rgba(39, 209, 124, .28);
+    --vermelho: #ff4d4d;
+    --font-display: "Black Ops One", "Arial Black", sans-serif;
+    --font-mono: "Share Tech Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(1200px 700px at 50% 10%, #0d1a10, var(--bg) 70%);
+    color: var(--verde);
+    font-family: var(--font-mono);
+    display: grid; place-items: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--amarelo); outline-offset: 2px; }
+
+  /* Textura de scanlines */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2; mix-blend-mode: overlay;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 3px);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(900px 500px at 50% 0%, rgba(39,209,124,.08), transparent 70%);
+    animation: flicker 6s ease-in-out infinite;
+  }
+  @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: .85; } }
+
+  .term {
+    position: relative; z-index: 3; width: 100%; max-width: 520px;
+    background: linear-gradient(180deg, rgba(10,18,13,.96), rgba(5,8,6,.98));
+    border: 1px solid var(--linha); border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(39,209,124,.12), 0 30px 70px rgba(0,0,0,.65), inset 0 0 60px rgba(39,209,124,.04);
+    padding: 26px 24px 22px;
+  }
+  .faixa { height: 4px; margin: -26px -24px 20px; background: linear-gradient(90deg, var(--verde-dim), var(--amarelo) 50%, var(--azul)); }
+
+  .brasao { display: flex; justify-content: center; margin-bottom: 6px; }
+  .brasao img { width: 112px; height: auto; filter: drop-shadow(0 0 14px rgba(39,209,124,.35)); }
+
+  h1 { font-family: var(--font-display); font-size: 22px; text-align: center; letter-spacing: .04em; margin: 4px 0 2px; color: #eaf7ee; }
+  .lema { text-align: center; font-size: 12px; letter-spacing: .14em; color: var(--amarelo); margin: 0 0 2px; }
+  .unidade { text-align: center; font-size: 11.5px; color: var(--verde-dim); margin: 0 0 16px; letter-spacing: .08em; }
+
+  .boot { font-size: 12.5px; line-height: 1.7; color: var(--verde-dim); margin: 0 0 14px; min-height: 90px; }
+  .boot div { opacity: 0; animation: surgir .35s ease forwards; }
+  .boot div:nth-child(1) { animation-delay: .05s; }
+  .boot div:nth-child(2) { animation-delay: .35s; }
+  .boot div:nth-child(3) { animation-delay: .65s; }
+  .boot div:nth-child(4) { animation-delay: .95s; color: var(--verde); }
+  @keyframes surgir { to { opacity: 1; } }
+  .boot b { color: var(--verde); }
+  .cursor { display: inline-block; width: 8px; height: 13px; background: var(--verde); margin-left: 4px; animation: pisca 1s step-end infinite; vertical-align: -2px; }
+  @keyframes pisca { 50% { opacity: 0; } }
+
+  form { display: grid; gap: 12px; }
+  .prompt { font-size: 12.5px; color: var(--verde-dim); margin-bottom: 4px; }
+  .prompt b { color: var(--verde); }
+  .campo { position: relative; }
+  .campo input {
+    width: 100%; background: #04100a; border: 1px solid var(--linha); border-radius: 2px;
+    color: #eaf7ee; font: 15px var(--font-mono); padding: 11px 44px 11px 12px; outline: 0;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .campo input::placeholder { color: rgba(39,209,124,.35); }
+  .campo input:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(39,209,124,.14); }
+  .campo .ver {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: var(--verde-dim); font-size: 11px; letter-spacing: .05em;
+    padding: 6px; cursor: pointer;
+  }
+  .campo .ver:hover { color: var(--verde); }
+
+  .enviar {
+    margin-top: 4px; padding: 13px 16px; border: 1px solid var(--verde); border-radius: 2px;
+    background: rgba(39,209,124,.1); color: var(--verde); font: 700 14px var(--font-mono); letter-spacing: .08em;
+    cursor: pointer; transition: background .2s, color .2s, box-shadow .2s;
+  }
+  .enviar:hover { background: var(--verde); color: #04100a; box-shadow: 0 0 22px rgba(39,209,124,.35); }
+  .enviar[disabled] { opacity: .55; cursor: progress; }
+
+  .status { min-height: 20px; margin-top: 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+  .status.ok { color: var(--verde); }
+  .status.erro { color: var(--vermelho); }
+
+  .rodape { margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--linha); font-size: 11.5px; color: var(--verde-dim); line-height: 1.6; text-align: center; }
+  .rodape b { color: var(--amarelo); }
+
+  @media (max-width: 420px) { .term { padding: 22px 16px 18px; } h1 { font-size: 19px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: .01ms !important; } .boot div { opacity: 1; } }
+</style>
+</head>
+<body>
+<main class="term">
+  <div class="faixa"></div>
+  <div class="brasao"><img src="crest.png" alt="Brasão Border Eagles · Colégio Roosevelt"></div>
+  <h1>BORDER EAGLES</h1>
+  <p class="lema">DISCIPLINA · VIGILÂNCIA · FRONTEIRAS</p>
+  <p class="unidade">UNIDADE #36809 — INTEL BRIEF</p>
+
+  <div class="boot" id="boot">
+    <div>&gt; inicializando canal seguro...</div>
+    <div>&gt; verificando integridade do terminal... <b>OK</b></div>
+    <div>&gt; aguardando credenciais do operador...</div>
+    <div>operador@fronteira:~$ <span class="cursor"></span></div>
+  </div>
+
+  <form id="form" novalidate>
+    <div>
+      <p class="prompt">operador@fronteira:~$ <b>login --id</b></p>
+      <div class="campo"><input id="login" type="text" autocomplete="username" placeholder="id do operador" required></div>
+    </div>
+    <div>
+      <p class="prompt">operador@fronteira:~$ <b>login --senha</b></p>
+      <div class="campo">
+        <input id="senha" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        <button class="ver" type="button" id="ver">MOSTRAR</button>
+      </div>
+    </div>
+    <button class="enviar" type="submit" id="enviar">[ENTER] AUTENTICAR</button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </form>
+
+  <div class="rodape">
+    Acesso restrito a operadores cadastrados pelo Comando.<br>
+    Sem credenciais? <b>Solicite liberação ao Comando</b> pelo canal interno.<br>
+    Toda tentativa de acesso é registrada no Command Post.
+  </div>
+</main>
+
+<script>
+  /* ===== Configuração =====
+     Projeto Supabase separado do Rota Segura. Preencha com os dados do novo projeto. */
+  const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_PROJETO_SUPABASE";
+  const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_ANON_PUBLIC";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
+  const form = $("form"), enviar = $("enviar"), status = $("status");
+
+  $("ver").onclick = () => {
+    const s = $("senha"); const oculto = s.type === "password";
+    s.type = oculto ? "text" : "password";
+    $("ver").textContent = oculto ? "OCULTAR" : "MOSTRAR";
+  };
+
+  function marcar(txt, tipo) { status.textContent = txt; status.className = "status" + (tipo ? " " + tipo : ""); }
+
+  // Registra a tentativa (nome digitado + resultado), sem IP e sem senha.
+  async function registrar(nome, sucesso) {
+    try {
+      await sb.from("tentativas_acesso").insert({ alvo: "intel-brief", nome_tentado: nome, sucesso });
+    } catch (e) { console.warn("Registro:", e.message || e); }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const login = $("login").value.trim();
+    const senha = $("senha").value;
+    if (!login || !senha) return marcar("> erro: informe login e senha.", "erro");
+
+    enviar.disabled = true;
+    marcar("> autenticando...");
+
+    const { data, error } = await sb.auth.signInWithPassword({ email: login, password: senha });
+
+    if (error) {
+      await registrar(login, false);
+      marcar("> ACESSO NEGADO: credenciais inválidas.\n> tentativa registrada no Command Post.", "erro");
+      enviar.disabled = false;
+      return;
+    }
+
+    const nome = (data.user.user_metadata && data.user.user_metadata.nome) || login;
+    await registrar(nome, true);
+    marcar("> ACESSO CONCEDIDO, " + nome + ".\n> solicitação enviada ao Command Post.\n> aguarde autorização.", "ok");
+    await sb.auth.signOut(); // o Intel Brief só registra a tentativa; não há painel aqui
+    enviar.disabled = false;
+    form.reset();
+  });
+</script>
+</body>
+</html>
