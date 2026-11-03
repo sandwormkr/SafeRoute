@@ -898,7 +898,11 @@
 
   /* ===== Maps ===== */
   // Se quiser fixar a posição exata do colégio, preencha: { lat: -24.0000, lng: -54.0000 }
-  const ESCOLA_FIXA = null;
+  const ESCOLA_FIXA = {
+    lat: -24.086405,
+    lng: -54.247979,
+    aproximado: false
+  };
   const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.086405, lng: -54.247979, aproximado: false };
   const ATIVO_MS = 2 * 60 * 1000;     // "ao vivo": sinal nos últimos 2 min
   const EXPIRA_MS = 15 * 60 * 1000;   // depois disso o ônibus some do mapa
@@ -949,7 +953,7 @@
 
   async function montarMapa() {
     mapaIniciado = true;
-    Object.assign(ESCOLA, ESCOLA_FIXA || await resolverEscola());
+    Object.assign(ESCOLA, ESCOLA_FIXA);
     mapa = L.map("mapa").setView([ESCOLA.lat, ESCOLA.lng], 14);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapa);
     L.marker([ESCOLA.lat, ESCOLA.lng], {
