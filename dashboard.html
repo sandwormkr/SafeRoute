@@ -899,7 +899,7 @@
   /* ===== Maps ===== */
   // Se quiser fixar a posição exata do colégio, preencha: { lat: -24.0000, lng: -54.0000 }
   const ESCOLA_FIXA = null;
-  const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.0845, lng: -54.2569, aproximado: false };
+  const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.086505584581968, lng: -54.24833873401808, aproximado: false };
   const ATIVO_MS = 2 * 60 * 1000;     // "ao vivo": sinal nos últimos 2 min
   const EXPIRA_MS = 15 * 60 * 1000;   // depois disso o ônibus some do mapa
 
@@ -920,7 +920,7 @@
         return c;
       }
     } catch (_) {}
-    return { lat: -24.0845, lng: -54.2569, aproximado: true };
+    return { lat: -24.086505584581958, lng: -54.24833873401808, aproximado: true };
   }
 
   function distM(la1, lo1, la2, lo2) {
