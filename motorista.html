@@ -166,7 +166,11 @@
   const LOGIN_URL = "login.html";
 
   // Se quiser fixar a posição exata do colégio, preencha: { lat: -24.0000, lng: -54.0000 }
-  const ESCOLA_FIXA = null;
+  const ESCOLA_FIXA = {
+    lat: 24.086405,
+    lng: 54.246979,
+    aproximado: false
+  };
   const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.0845, lng: -54.2569, aproximado: false };
 
   const INTERVALO_ENVIO = 5000;     // envia a cada 5 s
@@ -206,7 +210,7 @@
 
   /* ===== Mapa ===== */
   async function montarMapa() {
-    Object.assign(ESCOLA, ESCOLA_FIXA || await resolverEscola());
+    Object.assign(ESCOLA, ESCOLA_FIXA);
     mapa = L.map("mapa").setView([ESCOLA.lat, ESCOLA.lng], 14);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapa);
     L.marker([ESCOLA.lat, ESCOLA.lng], {
