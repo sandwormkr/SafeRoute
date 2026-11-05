@@ -3,490 +3,253 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EaglesOS · Server Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>EaglesOS · Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #090a0f;
-    --surface: #111319;
-    --surface-border: #1e222d;
-    --text-main: #d1d5db;
-    --text-muted: #6b7280;
-    --accent: #3b82f6;
-    --accent-dim: rgba(59, 130, 246, 0.1);
-    --success: #10b981;
-    --success-dim: rgba(16, 185, 129, 0.1);
-    --danger: #ef4444;
-    --danger-dim: rgba(239, 68, 68, 0.1);
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  
-  body {
-    background-color: var(--bg);
-    color: var(--text-main);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.5;
-    min-height: 100vh;
-    padding: 24px 16px;
-  }
-
-  [hidden] { display: none !important; }
-  button, input, select { font: inherit; color: inherit; background: transparent; border: none; }
-  :focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
-
-  /* Demo Banner Minimalist */
-  .demo-banner {
-    max-width: 1000px;
-    margin: 0 auto 20px;
-    padding: 8px 12px;
-    background: var(--surface);
-    border: 1px solid var(--surface-border);
-    border-radius: 4px;
-    color: var(--text-muted);
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .demo-banner .dot {
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent);
-  }
-
-  /* App Layout */
-  .app {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--surface-border);
-    border-radius: 6px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
-
-  /* Header / System Info */
-  .sys-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--surface-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    background: rgba(255,255,255,0.01);
-  }
-  .sys-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .sys-brand h1 {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: #fff;
-  }
-  .sys-brand .version {
-    font-size: 11px;
-    color: var(--text-muted);
-    background: var(--bg);
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px solid var(--surface-border);
-  }
-  .btn-logout {
-    padding: 6px 12px;
-    border: 1px solid var(--surface-border);
-    border-radius: 4px;
-    font-size: 11px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .btn-logout:hover {
-    border-color: var(--text-muted);
-    color: var(--text-main);
-  }
-
-  /* Navigation Tabs */
-  .nav-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--surface-border);
-    background: var(--bg);
-    padding: 0 12px;
-  }
-  .tab-btn {
-    padding: 10px 16px;
-    font-size: 12px;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
-  }
-  .tab-btn:hover { color: var(--text-main); }
-  .tab-btn[aria-selected="true"] {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-
-  /* Content Area */
-  .content { padding: 20px; }
-
-  /* Metrics Grid */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .metric-card {
-    background: var(--bg);
-    border: 1px solid var(--surface-border);
-    padding: 12px 16px;
-    border-radius: 4px;
-  }
-  .metric-card .label {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-    display: block;
-  }
-  .metric-card .value {
-    font-size: 20px;
-    font-weight: 500;
-    color: #fff;
-  }
-  .metric-card.alert {
-    border-color: rgba(239, 68, 68, 0.4);
-    background: var(--danger-dim);
-  }
-  .metric-card.alert .value { color: var(--danger); }
-
-  /* Panel & Data Table */
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .panel-title {
-    color: var(--text-main);
-    font-weight: 500;
-  }
-
-  .table-wrapper {
-    background: var(--bg);
-    border: 1px solid var(--surface-border);
-    border-radius: 4px;
-    overflow-x: auto;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    white-space: nowrap;
-  }
-  th {
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--surface-border);
-    background: rgba(255,255,255,0.01);
-  }
-  td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--surface-border);
-    color: var(--text-main);
-    font-size: 12px;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr.falha td { background: rgba(239, 68, 68, 0.02); }
-  tr.alerta td:first-child { border-left: 2px solid var(--danger); }
-  tr.novo { animation: highlight 1s ease; }
-
-  @keyframes highlight {
-    from { background-color: var(--accent-dim); }
-  }
-
-  /* Status Chips */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 500;
-  }
-  .badge.success { background: var(--success-dim); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
-  .badge.danger { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-
-  /* Controls & Search */
-  .search-input {
-    width: 100%;
-    max-width: 300px;
-    background: var(--bg);
-    border: 1px solid var(--surface-border);
-    border-radius: 4px;
-    padding: 8px 12px;
-    font-size: 12px;
-    color: var(--text-main);
-    margin-bottom: 16px;
-  }
-  .search-input:focus { border-color: var(--accent); }
-
-  select.role-select {
-    background: var(--bg);
-    border: 1px solid var(--surface-border);
-    border-radius: 3px;
-    padding: 4px 8px;
-    font-size: 11px;
-    color: var(--text-main);
-    cursor: pointer;
-  }
-  select.role-select:disabled { opacity: 0.5; cursor: not-allowed; }
-  .user-self { font-size: 10px; color: var(--accent); margin-left: 6px; }
-
-  @media (max-width: 600px) {
-    body { padding: 8px; }
-    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+:root{--bg:#07080c;--surface:#0d1017;--border:#1b2230;--text:#c9d1d9;--muted:#6b7686;--ok:#10b981;--warn:#f59e0b;--bad:#ef4444;--font:'JetBrains Mono','Share Tech Mono',ui-monospace,monospace;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:13px/1.5 var(--font);min-height:100vh;padding:20px 14px}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit;background:transparent;border:0}
+:focus-visible{outline:1px solid var(--ok);outline-offset:2px}
+.banner,.app{max-width:1040px;margin:0 auto}
+.banner{padding:8px 12px;margin-bottom:14px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px}
+.banner b{color:var(--ok)} .banner code{color:var(--warn)}
+.app{border:1px solid var(--border);background:var(--surface);box-shadow:0 0 0 1px rgba(16,185,129,.05),0 20px 40px rgba(0,0,0,.5)}
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:14px;letter-spacing:.14em;color:#fff}
+.pill{font-size:10px;padding:2px 7px;border:1px solid var(--border);color:var(--muted)}
+.pill.on{color:var(--ok);border-color:rgba(16,185,129,.4)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:p 2s infinite}
+.alerting .pulse{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+@keyframes p{50%{opacity:.3}}
+.tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 16px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--text)} .tab[aria-selected=true]{color:var(--ok);border-bottom-color:var(--ok)}
+.content{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.card{background:var(--bg);border:1px solid var(--border);padding:10px 14px}
+.card .l{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.card .v{font-size:20px;font-weight:500;color:#fff}
+.card.warn{border-color:rgba(245,158,11,.5)} .card.warn .v{color:var(--warn)}
+.card.bad{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.07)} .card.bad .v{color:var(--bad)}
+.card.good .v{color:var(--ok)}
+.ph{display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px;color:var(--muted)}
+.ph b{color:var(--text);font-weight:500}
+.tw{background:var(--bg);border:1px solid var(--border);overflow-x:auto;max-height:420px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);font-size:12px}
+th{color:var(--muted);font-weight:500;position:sticky;top:0;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+tr.falha td{background:rgba(239,68,68,.03)} tr.alerta td:first-child{border-left:2px solid var(--bad)}
+tr.novo{animation:hl 1s}
+@keyframes hl{from{background:rgba(16,185,129,.15)}}
+.badge{padding:2px 6px;font-size:10px;border:1px solid}
+.badge.s{color:var(--ok);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
+.badge.d{color:var(--bad);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.badge.w{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.search{width:100%;max-width:300px;background:var(--bg);border:1px solid var(--border);padding:8px 12px;margin-bottom:14px}
+.search:focus{border-color:var(--ok)}
+.you{color:var(--ok);font-size:10px;margin-left:6px}
+.term{background:var(--bg);border:1px solid var(--border);height:400px;display:flex;flex-direction:column}
+.out{flex:1;overflow-y:auto;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px}
+.out .ok{color:var(--ok)} .out .err{color:var(--bad)} .out .wrn{color:var(--warn)} .out .dim{color:var(--muted)} .out .cmd{color:#fff}
+.inl{display:flex;gap:8px;border-top:1px solid var(--border);padding:10px 12px;align-items:center}
+.inl .ps{color:var(--ok);white-space:nowrap} .inl input{flex:1;min-width:0}
+.hint{margin-top:10px;font-size:11px;color:var(--muted)} .hint code{color:var(--warn)}
+@media(max-width:600px){body{padding:8px}.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-
-<div class="demo-banner">
-  <span class="dot"></span>
-  <span><b>EaglesOS Demo Mode</b> — dados de eventos e monitoramento simulados localmente.</span>
-</div>
+<div class="banner"><b>EaglesOS Demo Mode</b> — dados simulados localmente. Chave de autorização da demo: <code>AQUILA-01</code></div>
 
 <div class="app" id="app">
-  <header class="sys-header">
-    <div class="sys-brand">
-      <h1>EaglesOS</h1>
-      <span class="version">v2.4.0-sys</span>
-    </div>
-    <button class="btn-logout" type="button" id="sair">system.exit()</button>
+  <header class="head">
+    <div class="brand"><span class="pulse"></span><h1>EAGLESOS // COMMAND CENTER</h1><span class="pill">v3.0.0-tac</span></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="pill" id="sess">SESSÃO: NÃO AUTENTICADA</span><button class="pill" type="button" id="sair" style="cursor:pointer">system.exit()</button></div>
   </header>
-
-  <nav class="nav-tabs" role="tablist">
-    <button class="tab-btn" role="tab" id="aba-log" aria-selected="true" type="button">system.log</button>
-    <button class="tab-btn" role="tab" id="aba-operadores" aria-selected="false" type="button">users.db</button>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-log" aria-selected="true" type="button">system.log</button>
+    <button class="tab" role="tab" id="t-users" aria-selected="false" type="button">users.db</button>
+    <button class="tab" role="tab" id="t-cli" aria-selected="false" type="button">system.cli</button>
   </nav>
 
   <div class="content">
-    <section id="view-log">
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="label">Total Requests</span>
-          <div class="value" id="s-total">0</div>
-        </div>
-        <div class="metric-card">
-          <span class="label">Authorized</span>
-          <div class="value" id="s-ok">0</div>
-        </div>
-        <div class="metric-card">
-          <span class="label">Denied</span>
-          <div class="value" id="s-fail">0</div>
-        </div>
-        <div class="metric-card" id="stat-alerta">
-          <span class="label">Active Alerts</span>
-          <div class="value" id="s-alerta">0</div>
-        </div>
+    <section id="v-log">
+      <div class="grid">
+        <div class="card good" id="c-def"><span class="l">DEFCON</span><div class="v" id="s-def">5</div></div>
+        <div class="card" id="c-int"><span class="l">System Integrity</span><div class="v" id="s-int">100%</div></div>
+        <div class="card"><span class="l">Active Nodes</span><div class="v" id="s-nodes">12</div></div>
+        <div class="card" id="c-al"><span class="l">Active Alerts</span><div class="v" id="s-al">0</div></div>
+        <div class="card"><span class="l">Requests</span><div class="v" id="s-tot">0</div></div>
+        <div class="card"><span class="l">Authorized / Denied</span><div class="v"><span id="s-ok" style="color:var(--ok)">0</span> / <span id="s-fail" style="color:var(--bad)">0</span></div></div>
       </div>
-
-      <div class="panel-header">
-        <span class="panel-title">Realtime Access Audit</span>
-        <span id="atualizado">--:--:--</span>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>TIMESTAMP</th>
-              <th>RESOURCE</th>
-              <th>IDENTITY</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
+      <div class="ph"><b>Realtime Access Audit</b><span id="upd">--:--:--</span></div>
+      <div class="tw"><table><thead><tr><th>TIMESTAMP</th><th>RESOURCE</th><th>IDENTITY</th><th>DETAIL</th><th>STATUS</th></tr></thead><tbody id="tbody"></tbody></table></div>
     </section>
 
-    <section id="view-operadores" hidden>
-      <input class="search-input" type="search" id="op-busca" placeholder="Filter by user or email...">
-      
-      <div class="panel-header">
-        <span class="panel-title">Registered System Identities</span>
-        <span id="op-total">0 records</span>
-      </div>
+    <section id="v-users" hidden>
+      <input class="search" type="search" id="busca" placeholder="Filtrar por usuário ou e-mail...">
+      <div class="ph"><b>Registered System Identities</b><span id="u-tot">0</span></div>
+      <div class="tw"><table><thead><tr><th>USER</th><th>EMAIL</th><th>ROLE</th><th>ENTRY</th></tr></thead><tbody id="u-body"></tbody></table></div>
+      <p class="hint">Somente o nível <code>-C</code> (Comando) tem entrada permitida no EaglesOS.</p>
+    </section>
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>USER</th>
-              <th>EMAIL</th>
-              <th>ROLE</th>
-            </tr>
-          </thead>
-          <tbody id="op-tbody"></tbody>
-        </table>
+    <section id="v-cli" hidden>
+      <div class="term">
+        <div class="out" id="out" aria-live="polite"></div>
+        <form class="inl" id="form" autocomplete="off"><span class="ps" id="ps">guest@eagles:~$</span><input id="in" type="text" spellcheck="false" autocapitalize="off" aria-label="Comando"></form>
       </div>
+      <p class="hint">Sintaxe: <code>sudo bordercommand --roleuser [-C|-O|-V] [NOME]</code> · digite <code>help</code> para ajuda.</p>
     </section>
   </div>
 </div>
 
 <script>
-  const $ = (id) => document.getElementById(id);
+const $=id=>document.getElementById(id);
+const KEY="AQUILA-01";
+const ROLES={C:{k:"admin",n:"COMANDO",entry:true},O:{k:"operador",n:"OPERADOR",entry:false},V:{k:"vigilancia",n:"VIGILÂNCIA",entry:false}};
+const ROLE_BY_KEY={admin:ROLES.C,operador:ROLES.O,vigilancia:ROLES.V};
+const now=Date.now();
+let logs=[
+ {h:now-2*60e3,alvo:"srv-intel",nome:"Operador Silva",det:"GET /brief",ok:true},
+ {h:now-6*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
+ {h:now-9*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
+ {h:now-11*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
+ {h:now-15*60e3,alvo:"srv-post",nome:"Comando",det:"GET /post",ok:true},
+ {h:now-22*60e3,alvo:"srv-intel",nome:"Operador Costa",det:"GET /brief",ok:true}
+];
+let users=[
+ {nome:"Capitão Almeida",email:"almeida@eagles.os",role:"admin",voce:true},
+ {nome:"Operador Silva",email:"silva@eagles.os",role:"operador"},
+ {nome:"Operador Costa",email:"costa@eagles.os",role:"operador"},
+ {nome:"Sargento Ferreira",email:"ferreira@eagles.os",role:"vigilancia"},
+ {nome:"Tenente Ramos",email:"ramos@eagles.os",role:"admin"}
+];
+let session=null, history=[], hi=0;
+const FAKE=["desconhecido","admin","root","teste123","operador.x"];
 
-  /* ===== Dados fictícios ===== */
-  const agora = Date.now();
-  let tentativas = [
-    { h: agora - 2 * 60e3,  alvo: "intel-brief",   nome: "Operador Silva",   ok: true },
-    { h: agora - 6 * 60e3,  alvo: "intel-brief",   nome: "desconhecido",     ok: false },
-    { h: agora - 9 * 60e3,  alvo: "intel-brief",   nome: "desconhecido",     ok: false },
-    { h: agora - 11 * 60e3, alvo: "intel-brief",   nome: "desconhecido",     ok: false },
-    { h: agora - 15 * 60e3, alvo: "command-post",  nome: "Comando",         ok: true },
-    { h: agora - 22 * 60e3, alvo: "intel-brief",   nome: "Operador Costa",   ok: true },
-    { h: agora - 34 * 60e3, alvo: "intel-brief",   nome: "fulano.teste",     ok: false }
-  ];
-  const NOMES_FALSOS = ["desconhecido", "admin", "root", "teste123", "operador.x"];
+/* Tabs */
+const TABS=["log","users","cli"];
+TABS.forEach(t=>$("t-"+t).onclick=()=>tab(t));
+function tab(a){TABS.forEach(t=>{$("t-"+t).setAttribute("aria-selected",String(t===a));$("v-"+t).hidden=t!==a});
+ if(a==="users")drawUsers(); if(a==="cli")$("in").focus();}
 
-  /* ===== Alternância de Abas ===== */
-  $("aba-log").onclick = () => trocarAba("log");
-  $("aba-operadores").onclick = () => trocarAba("operadores");
-  
-  function trocarAba(aba) {
-    const op = aba === "operadores";
-    $("aba-log").setAttribute("aria-selected", String(!op));
-    $("aba-operadores").setAttribute("aria-selected", String(op));
-    $("view-log").hidden = op; 
-    $("view-operadores").hidden = !op;
-    if (op) desenharOperadores();
-  }
+/* Audit */
+function recentFails(nome,ate){return logs.filter(t=>t.nome===nome&&!t.ok&&t.h>=ate-3600e3&&t.h<=ate).length}
+function alertNames(){return new Set(logs.filter(t=>!t.ok&&recentFails(t.nome,t.h)>=3).map(t=>t.nome))}
+function addLog(alvo,nome,det,ok){logs.push({h:Date.now(),alvo,nome,det,ok,novo:true});if(logs.length>60)logs.shift();drawLog()}
+function drawLog(){
+ const ok=logs.filter(t=>t.ok).length,fail=logs.length-ok,al=alertNames();
+ const n=al.size,def=n>=3?2:n===2?3:n===1?4:5,integ=Math.max(40,100-n*12-Math.min(fail,15));
+ $("s-tot").textContent=logs.length;$("s-ok").textContent=ok;$("s-fail").textContent=fail;$("s-al").textContent=n;
+ $("s-def").textContent=def;$("s-int").textContent=integ+"%";
+ $("c-al").className="card"+(n?" bad":"");
+ $("c-def").className="card "+(def>=5?"good":def>=4?"warn":"bad");
+ $("c-int").className="card"+(integ<70?" bad":integ<90?" warn":"");
+ $("app").classList.toggle("alerting",n>0);
+ $("upd").textContent=new Date().toLocaleTimeString("pt-BR");
+ const tb=$("tbody");tb.replaceChildren();
+ logs.slice().sort((a,b)=>b.h-a.h).forEach(t=>{
+  const tr=document.createElement("tr");
+  if(!t.ok)tr.className="falha"; if(al.has(t.nome))tr.classList.add("alerta");
+  if(t.novo){tr.classList.add("novo");delete t.novo}
+  const cells=[new Date(t.h).toLocaleTimeString("pt-BR"),t.alvo,t.nome,t.det||"-"];
+  cells.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});
+  const td=document.createElement("td"),b=document.createElement("span");
+  b.className="badge "+(t.ok?"s":"d");b.textContent=t.ok?"200 OK":"403 DENIED";td.appendChild(b);tr.appendChild(td);
+  tb.appendChild(tr);
+ });
+}
 
-  /* ===== Operadores / Usuários ===== */
-  let operadores = [
-    { nome: "Capitão Almeida", email: "almeida@eagles.os", role: "admin", voce: true },
-    { nome: "Operador Silva", email: "silva@eagles.os", role: "user" },
-    { nome: "Operador Costa", email: "costa@eagles.os", role: "user" },
-    { nome: "Sargento Ferreira", email: "ferreira@eagles.os", role: "user" },
-    { nome: "Tenente Ramos", email: "ramos@eagles.os", role: "admin" }
-  ];
+/* Users */
+function drawUsers(){
+ const f=$("busca").value.trim().toLowerCase();
+ const list=users.filter(o=>!f||o.nome.toLowerCase().includes(f)||o.email.toLowerCase().includes(f));
+ $("u-tot").textContent=users.length+" registros";
+ const tb=$("u-body");tb.replaceChildren();
+ list.forEach(o=>{
+  const tr=document.createElement("tr");
+  const a=document.createElement("td");a.textContent=o.nome;
+  if(o.voce){const s=document.createElement("span");s.className="you";s.textContent="(você)";a.appendChild(s)}
+  const b=document.createElement("td");b.textContent=o.email;
+  const c=document.createElement("td"),sel=document.createElement("select");
+  sel.style.cssText="background:var(--bg);border:1px solid var(--border);padding:3px 6px;font-size:11px";
+  Object.values(ROLES).forEach(r=>{const op=document.createElement("option");op.value=r.k;op.textContent=r.n;if(r.k===o.role)op.selected=true;sel.appendChild(op)});
+  sel.disabled=true;sel.title="Altere cargos via system.cli";c.appendChild(sel);
+  const d=document.createElement("td"),bd=document.createElement("span"),ent=ROLE_BY_KEY[o.role].entry;
+  bd.className="badge "+(ent?"s":"w");bd.textContent=ent?"PERMITIDA":"NEGADA";d.appendChild(bd);
+  tr.append(a,b,c,d);tb.appendChild(tr);
+ });
+}
+$("busca").addEventListener("input",drawUsers);
 
-  function desenharOperadores() {
-    const f = $("op-busca").value.trim().toLowerCase();
-    const lista = operadores.filter(o => !f || o.nome.toLowerCase().includes(f) || o.email.toLowerCase().includes(f));
-    const tbody = $("op-tbody"); 
-    tbody.replaceChildren();
-    
-    $("op-total").textContent = operadores.length + " users registered";
-    
-    lista.forEach(o => {
-      const tr = document.createElement("tr");
-      
-      const tdNome = document.createElement("td"); 
-      tdNome.textContent = o.nome;
-      if (o.voce) { 
-        const v = document.createElement("span"); 
-        v.className = "user-self"; 
-        v.textContent = "(you)"; 
-        tdNome.appendChild(v); 
-      }
-      
-      const tdMail = document.createElement("td"); 
-      tdMail.textContent = o.email;
-      
-      const tdCargo = document.createElement("td");
-      const sel = document.createElement("select"); 
-      sel.className = "role-select";
-      
-      [["user", "USER"], ["admin", "ADMIN"]].forEach(([v, n]) => {
-        const opt = document.createElement("option"); 
-        opt.value = v; 
-        opt.textContent = n;
-        if (v === o.role) opt.selected = true; 
-        sel.appendChild(opt);
-      });
-      
-      sel.disabled = !!o.voce;
-      sel.onchange = () => { o.role = sel.value; };
-      tdCargo.appendChild(sel);
-      
-      tr.append(tdNome, tdMail, tdCargo);
-      tbody.appendChild(tr);
-    });
-  }
-  
-  $("op-busca").addEventListener("input", desenharOperadores);
+/* CLI */
+function print(txt,cls){const d=document.createElement("div");if(cls)d.className=cls;d.textContent=txt;$("out").appendChild(d);$("out").scrollTop=1e9}
+const stamp=()=>"["+new Date().toLocaleTimeString("pt-BR")+"]";
+const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+function who(){return session?session.nome:"anon"}
+function fail(det,msg,code){addLog("cli.bordercommand","cli:"+who(),det,false);print(stamp()+" ERR-"+code+" // "+msg,"err")}
+function setSession(s){session=s;$("sess").textContent=s?"SESSÃO: "+s.nome.toUpperCase():"SESSÃO: NÃO AUTENTICADA";$("sess").className="pill"+(s?" on":"");
+ $("ps").textContent=(s?"almeida":"guest")+"@eagles:~$"}
 
-  /* ===== Renderização de Logs ===== */
-  desenhar();
-  setInterval(simularNovaTentativa, 9000);
-  setInterval(() => { 
-    $("atualizado").textContent = new Date().toLocaleTimeString("pt-BR"); 
-  }, 1000);
+function run(line){
+ const raw=line.trim();if(!raw)return;
+ print($("ps").textContent+" "+raw,"cmd");
+ const p=raw.split(/\s+/),c=p[0].toLowerCase();
+ if(c==="help"){["Comandos:","  login <chave>        autentica a sessão operacional","  logout               encerra a sessão","  whoami               identidade atual","  users                lista identidades","  clear                limpa o terminal","  sudo bordercommand --roleuser [-C|-O|-V] [NOME]","     -C Comando (admin, entrada permitida)","     -O Operador (entrada não permitida)","     -V Vigilância (somente leitura, entrada não permitida)"].forEach(l=>print(l,"dim"));return}
+ if(c==="clear"){$("out").replaceChildren();return}
+ if(c==="whoami"){print(session?session.nome+" [COMANDO]":"guest [NÃO AUTENTICADO]");return}
+ if(c==="users"){users.forEach(u=>print("  "+u.nome.padEnd(20)+" "+ROLE_BY_KEY[u.role].n,"dim"));return}
+ if(c==="logout"){setSession(null);addLog("cli.session","cli:"+who(),"logout",true);print(stamp()+" Sessão encerrada.","wrn");return}
+ if(c==="login"){
+  if(p[1]===KEY){const adm=users.find(u=>u.voce);setSession(adm);addLog("cli.auth",adm.nome,"login",true);print(stamp()+" AUTH OK // credencial validada. Bem-vindo, "+adm.nome+".","ok")}
+  else fail("login inválido","credencial rejeitada. Tentativa registrada.","401");
+  return}
+ if(c==="sudo"&&(p[1]||"").toLowerCase()==="bordercommand"){bordercmd(p.slice(2));return}
+ fail("cmd desconhecido: "+p[0].slice(0,24),"comando não reconhecido “"+p[0].slice(0,24)+"”. Digite help.","400");
+}
 
-  function contarFalhasRecentes(nome, ateH) {
-    const limite = ateH - 3600e3;
-    return tentativas.filter(t => t.nome === nome && !t.ok && t.h >= limite && t.h <= ateH).length;
-  }
+function bordercmd(a){
+ if(!session){fail("roleuser sem sessão","acesso negado: sessão não autenticada. Use login <chave>.","403");return}
+ if(a[0]!=="--roleuser"){fail("sintaxe inválida","sintaxe incorreta. Uso: sudo bordercommand --roleuser [-C|-O|-V] [NOME]","422");return}
+ const m=(a[1]||"").match(/^-([A-Za-z])$/);
+ if(!m){fail("flag ausente","flag de nível ausente ou malformada.","422");return}
+ const fl=m[1].toUpperCase();
+ if(!ROLES[fl]||m[1]!==fl){fail("flag inválida -"+m[1].slice(0,4),"flag de nível inválida “-"+m[1].slice(0,4)+"”. Suportadas: -C, -O, -V.","422");return}
+ const nome=a.slice(2).join(" ");
+ if(!nome){fail("usuário não informado","nome de usuário não informado.","422");return}
+ const u=users.find(x=>norm(x.nome)===norm(nome));
+ if(!u){fail("alvo não encontrado: "+nome.slice(0,30),"usuário “"+nome.slice(0,30)+"” não encontrado em users.db.","404");return}
+ if(u.voce&&fl!=="C"){fail("auto-rebaixamento bloqueado","operação bloqueada: não é permitido rebaixar a própria identidade.","403");return}
+ const r=ROLES[fl],ant=ROLE_BY_KEY[u.role].n;
+ u.role=r.k;
+ addLog("cli.bordercommand",session.nome,u.nome+": "+ant+" → "+r.n,true);
+ print(stamp()+" 200 OK // "+u.nome+": "+ant+" → "+r.n+" · entrada EaglesOS "+(r.entry?"PERMITIDA":"NEGADA"),"ok");
+ if(!$("v-users").hidden)drawUsers();
+ if(!r.entry)print(stamp()+" AVISO // identidade sem permissão de entrada no EaglesOS.","wrn");
+}
 
-  function desenhar() {
-    const ok = tentativas.filter(t => t.ok).length;
-    const fail = tentativas.length - ok;
-    const nomesAlerta = new Set(tentativas.filter(t => !t.ok && contarFalhasRecentes(t.nome, t.h) >= 3).map(t => t.nome));
-    
-    $("s-total").textContent = tentativas.length;
-    $("s-ok").textContent = ok;
-    $("s-fail").textContent = fail;
-    $("s-alerta").textContent = nomesAlerta.size;
-    $("stat-alerta").classList.toggle("alert", nomesAlerta.size > 0);
-    $("atualizado").textContent = new Date().toLocaleTimeString("pt-BR");
+$("form").onsubmit=e=>{e.preventDefault();const v=$("in").value;$("in").value="";if(v.trim()){history.push(v);hi=history.length}run(v)};
+$("in").addEventListener("keydown",e=>{
+ if(e.key==="ArrowUp"&&hi>0){hi--;$("in").value=history[hi];e.preventDefault()}
+ if(e.key==="ArrowDown"){hi=Math.min(hi+1,history.length);$("in").value=history[hi]||"";e.preventDefault()}
+});
+$("sair").onclick=()=>{setSession(null);alert("EaglesOS Demo: sessão encerrada no cliente.")};
 
-    const tbody = $("tbody"); 
-    tbody.replaceChildren();
-    
-    tentativas.slice().sort((a, b) => b.h - a.h).forEach(t => {
-      const tr = document.createElement("tr");
-      if (!t.ok) tr.className = "falha";
-      if (nomesAlerta.has(t.nome)) tr.classList.add("alerta");
-      if (t.novo) { tr.classList.add("novo"); delete t.novo; }
-      
-      const hora = new Date(t.h).toLocaleTimeString("pt-BR");
-      tr.innerHTML =
-        "<td>" + hora + "</td>" +
-        "<td>" + (t.alvo === "command-post" ? "srv-post" : "srv-intel") + "</td>" +
-        "<td>" + t.nome.replace(/</g, "&lt;") + "</td>" +
-        '<td><span class="badge ' + (t.ok ? "success" : "danger") + '">' + (t.ok ? "200 OK" : "403 DENIED") + "</span></td>";
-      tbody.appendChild(tr);
-    });
-  }
+/* Honeypot / ruído simulado */
+setInterval(()=>{
+ const f=Math.random()<.5,nome=f?FAKE[Math.floor(Math.random()*FAKE.length)]:"Operador Silva";
+ addLog("srv-intel",nome,"GET /brief",!f);
+ $("s-nodes").textContent=11+Math.floor(Math.random()*3);
+},9000);
+setInterval(()=>{$("upd").textContent=new Date().toLocaleTimeString("pt-BR")},1000);
 
-  function simularNovaTentativa() {
-    const falha = Math.random() < 0.6;
-    const nome = falha ? NOMES_FALSOS[Math.floor(Math.random() * NOMES_FALSOS.length)] : "Operador Silva";
-    tentativas.push({ h: Date.now(), alvo: "intel-brief", nome, ok: !falha, novo: true });
-    if (tentativas.length > 40) tentativas.shift();
-    desenhar();
-  }
-
-  $("sair").onclick = () => { alert("EaglesOS Demo: Sessão encerrada no cliente."); };
+print("EaglesOS tactical shell v3.0.0 — acesso restrito. Toda atividade é auditada.","wrn");
+print("Digite help. Autentique-se com: login <chave>","dim");
+drawLog();
 </script>
 </body>
 </html>
