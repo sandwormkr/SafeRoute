@@ -63,7 +63,7 @@ tr.novo{animation:hl 1s}
 </style>
 </head>
 <body>
-<div class="banner"><b>EaglesOS Demo Mode</b> — dados simulados localmente. Chave de autorização da demo: <code>AQUILA-01</code></div>
+<div class="banner"><b>EaglesOS Demo Mode</b> — dados simulados localmente. Chave de autorização da demo: <code>ADSUMUS</code></div>
 
 <div class="app" id="app">
   <header class="head">
@@ -109,7 +109,7 @@ tr.novo{animation:hl 1s}
 
 <script>
 const $=id=>document.getElementById(id);
-const KEY="AQUILA-01";
+const KEY="ADSUMUS";
 const ROLES={C:{k:"admin",n:"COMANDO",entry:true},O:{k:"operador",n:"OPERADOR",entry:false},V:{k:"vigilancia",n:"VIGILÂNCIA",entry:false}};
 const ROLE_BY_KEY={admin:ROLES.C,operador:ROLES.O,vigilancia:ROLES.V};
 const now=Date.now();
@@ -199,21 +199,21 @@ function run(line){
  const raw=line.trim();if(!raw)return;
  print($("ps").textContent+" "+raw,"cmd");
  const p=raw.split(/\s+/),c=p[0].toLowerCase();
- if(c==="help"){["Comandos:","  login <chave>        autentica a sessão operacional","  logout               encerra a sessão","  whoami               identidade atual","  users                lista identidades","  clear                limpa o terminal","  sudo bordercommand --roleuser [-C|-O|-V] [NOME]","     -C Comando (admin, entrada permitida)","     -O Operador (entrada não permitida)","     -V Vigilância (somente leitura, entrada não permitida)"].forEach(l=>print(l,"dim"));return}
+ if(c==="help"){["Comandos:","  ssh <chave>        autentica a sessão operacional","  logout               encerra a sessão","  whoami               identidade atual","  users                lista identidades","  clear                limpa o terminal","  bordercommand --roleuser [-C|-O|-V] [USER]","     -C Comando (admin, entrada permitida)","     -O Operador (entrada não permitida)","     -V Vigilância (somente leitura, entrada não permitida)"].forEach(l=>print(l,"dim"));return}
  if(c==="clear"){$("out").replaceChildren();return}
  if(c==="whoami"){print(session?session.nome+" [COMANDO]":"guest [NÃO AUTENTICADO]");return}
  if(c==="users"){users.forEach(u=>print("  "+u.nome.padEnd(20)+" "+ROLE_BY_KEY[u.role].n,"dim"));return}
  if(c==="logout"){setSession(null);addLog("cli.session","cli:"+who(),"logout",true);print(stamp()+" Sessão encerrada.","wrn");return}
- if(c==="login"){
-  if(p[1]===KEY){const adm=users.find(u=>u.voce);setSession(adm);addLog("cli.auth",adm.nome,"login",true);print(stamp()+" AUTH OK // credencial validada. Bem-vindo, "+adm.nome+".","ok")}
-  else fail("login inválido","credencial rejeitada. Tentativa registrada.","401");
+ if(c==="ssh"){
+  if(p[1]===KEY){const adm=users.find(u=>u.voce);setSession(adm);addLog("cli.auth",adm.nome,"ssh",true);print(stamp()+" AUTH OK // credencial validada. Bem-vindo, "+adm.nome+".","ok")}
+  else fail("key inválida","credencial rejeitada. Tentativa registrada.","401");
   return}
  if(c==="sudo"&&(p[1]||"").toLowerCase()==="bordercommand"){bordercmd(p.slice(2));return}
  fail("cmd desconhecido: "+p[0].slice(0,24),"comando não reconhecido “"+p[0].slice(0,24)+"”. Digite help.","400");
 }
 
 function bordercmd(a){
- if(!session){fail("roleuser sem sessão","acesso negado: sessão não autenticada. Use login <chave>.","403");return}
+ if(!session){fail("roleuser sem sessão","acesso negado: sessão não autenticada. Use ssh <chave>.","403");return}
  if(a[0]!=="--roleuser"){fail("sintaxe inválida","sintaxe incorreta. Uso: sudo bordercommand --roleuser [-C|-O|-V] [NOME]","422");return}
  const m=(a[1]||"").match(/^-([A-Za-z])$/);
  if(!m){fail("flag ausente","flag de nível ausente ou malformada.","422");return}
@@ -248,7 +248,7 @@ setInterval(()=>{
 setInterval(()=>{$("upd").textContent=new Date().toLocaleTimeString("pt-BR")},1000);
 
 print("EaglesOS tactical shell v3.0.0 — acesso restrito. Toda atividade é auditada.","wrn");
-print("Digite help. Autentique-se com: login <chave>","dim");
+print("Digite help. Autentique-se com: ssh <chave>","dim");
 drawLog();
 </script>
 </body>
