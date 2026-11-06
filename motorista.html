@@ -42,6 +42,10 @@
     transition: border-color .25s, color .25s;
   }
   .mini:hover { border-color: var(--green); color: var(--green); }
+  .acoes-evento { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .acoes-evento .mini.evento { flex: 1; min-width: 150px; justify-content: center; padding: 11px 10px; font-weight: 600; }
+  .acoes-evento .mini.evento.feito { border-color: var(--ok); color: var(--ok); background: #e9f5e7; }
+  .leaflet-popup-content { font: 600 14px var(--font-body); color: var(--green-dark); }
 
   h1 { margin: 0; font-family: var(--font-display); font-size: clamp(26px, 5vw, 32px); letter-spacing: -.02em; color: var(--green-dark); }
   .sub { margin: 6px 0 20px; color: var(--ink-dim); font-size: 15px; line-height: 1.45; }
@@ -134,6 +138,10 @@
         <span id="toggle-txt">Iniciar compartilhamento</span>
       </button>
       <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <div class="acoes-evento" id="acoes-evento" hidden>
+        <button class="mini evento" type="button" id="btn-embarque">🧒⬆️ Confirmar embarque</button>
+        <button class="mini evento" type="button" id="btn-desembarque">🧒⬇️ Confirmar desembarque</button>
+      </div>
       <div class="metricas">
         <div class="metrica"><span>Último envio</span><b id="m-envio">--</b></div>
         <div class="metrica"><span>Velocidade</span><b id="m-vel">--</b></div>
@@ -168,10 +176,10 @@
   // Se quiser fixar a posição exata do colégio, preencha: { lat: -24.0000, lng: -54.0000 }
   const ESCOLA_FIXA = {
     lat: -24.086405,
-    lng: -54.246979,
+    lng: -54.247979,
     aproximado: false
   };
-  const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.0845, lng: -54.2569, aproximado: false };
+  const ESCOLA = { nome: "Colégio Estadual Presidente Roosevelt", endereco: "R. Mato Grosso, 111 · Guaíra, PR", lat: -24.086405, lng: -54.247979, aproximado: false };
 
   const INTERVALO_ENVIO = 5000;     // envia a cada 5 s
   const INTERVALO_BATIMENTO = 10000; // se parado no trânsito, reenvia a última posição a cada 10 s
@@ -205,7 +213,7 @@
         return c;
       }
     } catch (_) {}
-    return { lat: -24.0845, lng: -54.2569, aproximado: true };
+    return { lat: -24.086405, lng: -54.247979, aproximado: true };
   }
 
   /* ===== Mapa ===== */
@@ -325,6 +333,7 @@
     abrirViagem();
     $("toggle").classList.add("parar");
     $("toggle-txt").textContent = "Parar compartilhamento";
+    $("acoes-evento").hidden = false;
     estado("erro", "Procurando GPS…");
     msg("Buscando sua posição…");
     watchId = navigator.geolocation.watchPosition(aoReceberPosicao, aoFalhar, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
@@ -340,6 +349,7 @@
     if (wake) { try { await wake.release(); } catch (_) {} wake = null; }
     $("toggle").classList.remove("parar");
     $("toggle-txt").textContent = "Iniciar compartilhamento";
+    $("acoes-evento").hidden = true;
     estado("parado", "Parado");
     let chegou = false;
     if (viagemId) {
@@ -352,6 +362,32 @@
       ? "Viagem concluída no colégio. Bom trabalho!"
       : "Compartilhamento encerrado longe do colégio: esta viagem não conta como concluída.");
   }
+
+  /* ===== Confirmação de embarque / desembarque ===== */
+  // Grava um evento junto da última posição (mesma linha de "localizacoes"),
+  // e o painel dos responsáveis mostra um popup em cima do ícone do ônibus.
+  const EVENTO_TEXTO = { embarque: "🧒⬆️ Embarque confirmado", desembarque: "🧒⬇️ Desembarque confirmado" };
+
+  function mostrarPopupEvento(tipo) {
+    if (!meuPin) return;
+    meuPin.bindPopup(EVENTO_TEXTO[tipo] || tipo).openPopup();
+    setTimeout(() => { try { meuPin.closePopup(); } catch (_) {} }, 6000);
+  }
+
+  async function confirmarEvento(tipo) {
+    if (!ativo || !user) { msg("Inicie o compartilhamento antes de confirmar embarque ou desembarque.", "erro"); return; }
+    const btn = tipo === "embarque" ? $("btn-embarque") : $("btn-desembarque");
+    btn.disabled = true;
+    const { error } = await sb.from("localizacoes").update({ evento: tipo, evento_em: new Date().toISOString() }).eq("motorista_id", user.id);
+    btn.disabled = false;
+    if (error) { msg("Não foi possível registrar. Tente de novo.", "erro"); return; }
+    msg(tipo === "embarque" ? "Embarque confirmado." : "Desembarque confirmado.", "ok");
+    mostrarPopupEvento(tipo);
+    btn.classList.add("feito");
+    setTimeout(() => btn.classList.remove("feito"), 2500);
+  }
+  $("btn-embarque").onclick = () => confirmarEvento("embarque");
+  $("btn-desembarque").onclick = () => confirmarEvento("desembarque");
 
   $("toggle").onclick = () => { if (ativo) parar(); else iniciar(); };
 
