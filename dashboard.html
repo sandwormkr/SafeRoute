@@ -169,6 +169,19 @@
   .btn:active { transform: translateY(1px); }
   .btn.sec { background: var(--white); color: var(--green); border: 1px solid var(--line); box-shadow: none; }
   .btn.sec:hover { border-color: var(--green); background: var(--tint-2); }
+  .btn.emerg { background: var(--bad); box-shadow: 0 8px 18px rgba(179, 38, 30, .28); }
+  .btn.emerg:hover { background: #8f1f19; }
+
+  .banner-emerg {
+    display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 20px;
+    border-radius: 20px; background: #fff3f2; border: 1px solid rgba(179, 38, 30, .35);
+    animation: entrar .35s var(--ease);
+  }
+  .banner-emerg b { display: block; font-size: 15.5px; color: var(--bad); margin-bottom: 2px; }
+  .banner-emerg p { margin: 0; font-size: 14px; line-height: 1.5; color: #7a2b25; }
+  .banner-acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+  .linha.urgente { border-color: rgba(179, 38, 30, .4); background: #fff6f5; }
+  .chip.urgente { background: var(--bad); color: var(--white); }
 
   /* Mapa (em breve) */
   .mapa-vazio { display: grid; place-items: center; min-height: 380px; text-align: center; color: var(--ink-dim); }
@@ -389,6 +402,18 @@
       </div>
     </header>
 
+    <!-- Banner de emergência (só para administradores/comando, aparece em tempo real) -->
+    <div class="banner-emerg" id="banner-emerg" hidden role="alert">
+      <div class="grow">
+        <b id="be-titulo">🚨 Emergência</b>
+        <p id="be-msg"></p>
+      </div>
+      <div class="banner-acoes">
+        <button class="btn sec peq" type="button" id="be-ver">Ver chamados</button>
+        <button class="fechar" type="button" id="be-fechar" aria-label="Fechar aviso">×</button>
+      </div>
+    </div>
+
     <!-- HOME -->
     <section id="view-home" class="view">
       <div class="grid">
@@ -453,6 +478,7 @@
             <div class="acoes-linha">
               <button class="btn" type="button" id="novo-chamado">Abrir chamado</button>
               <button class="btn sec" type="button" id="ver-chamados">Ver chamados</button>
+              <button class="btn emerg" type="button" id="btn-emergencia" hidden>🚨 Emergência</button>
             </div>
           </article>
           <article class="card" id="card-atalhos" hidden aria-label="Atalhos de gestão">
@@ -592,6 +618,16 @@
     <button class="btn" type="submit">Enviar chamado</button>
   </form>
   <div class="dlg-lista" id="dc-lista"></div>
+</dialog>
+
+<dialog id="dlg-emergencia" aria-labelledby="dlg-em-t">
+  <div class="dlg-topo"><h2 id="dlg-em-t">🚨 Emergência</h2><button class="fechar" type="button" data-fechar="dlg-emergencia" aria-label="Fechar">×</button></div>
+  <form class="dlg-form" id="f-emergencia">
+    <p class="legenda" style="margin:0">Isso notifica o colégio na hora, como urgente. Use só para emergências reais.</p>
+    <label class="fld">O que está acontecendo<textarea id="em-msg" required maxlength="400" placeholder="Descreva rapidamente a situação"></textarea></label>
+    <div class="erro-f" id="em-erro"></div>
+    <button class="btn emerg" type="submit">Enviar emergência</button>
+  </form>
 </dialog>
 
 <script>
@@ -794,6 +830,7 @@
     document.querySelectorAll(".gestao").forEach(n => { n.hidden = !admin; });
     $("card-atalhos").hidden = !admin;
     $("novo-aviso").hidden = !(admin || state.role === "motorista");
+    $("btn-emergencia").hidden = admin; // admin/comando já é quem recebe os avisos
     $("u-nome").textContent = nome;
     $("u-role").textContent = rotulo;
     $("avatar").textContent = iniciais(nome);
@@ -997,6 +1034,20 @@
     });
   }
 
+  // Popup de embarque/desembarque em cima do ícone do ônibus, quando o
+  // motorista confirma pela página dele. Evita reabrir o mesmo popup de novo
+  // a cada redesenho (guarda o "evento_em" já mostrado por motorista).
+  const EVENTO_TEXTO = { embarque: "🧒⬆️ Embarque confirmado", desembarque: "🧒⬇️ Desembarque confirmado" };
+  const eventosMostrados = {};
+  function talvezMostrarEvento(b, marcador) {
+    if (!b.evento || !b.evento_em || !marcador) return;
+    if (Date.now() - new Date(b.evento_em).getTime() > 20000) return; // só eventos dos últimos 20s
+    if (eventosMostrados[b.motorista_id] === b.evento_em) return;    // já mostrado
+    eventosMostrados[b.motorista_id] = b.evento_em;
+    marcador.bindPopup(EVENTO_TEXTO[b.evento] || b.evento).openPopup();
+    setTimeout(() => { try { marcador.closePopup(); } catch (_) {} }, 6000);
+  }
+
   function desenhar() {
     if (!mapa) return;
     const lista = visiveis();
@@ -1020,6 +1071,7 @@
         m.setLatLng([b.lat, b.lng]);
         if (m._chave !== chave) { m.setIcon(iconeBus(b, sel)); m._chave = chave; }
       }
+      talvezMostrarEvento(b, m);
     });
 
     if (primeiroAjuste && lista.length && selecionado) {
@@ -1234,10 +1286,12 @@
     const { data, error } = await sb.from("chamados").select("*").order("criado_em", { ascending: false }).limit(100);
     HOME.chamados = error ? [] : (data || []);
     const abertos = HOME.chamados.filter(c => c.status !== "resolvido");
+    const urgentes = abertos.filter(c => c.urgente).length;
     const andamento = abertos.filter(c => c.status === "em_andamento").length;
     $("ch-num").textContent = abertos.length;
     $("ch-txt").textContent = abertos.length === 1 ? "ocorrência aberta" : "ocorrências abertas";
-    $("ch-legenda").textContent = (ehAdmin(state.role) ? "Chamados de todos os usuários" : "Seus chamados com o suporte") + (andamento ? " · " + andamento + " em andamento" : "") + ".";
+    $("ch-legenda").textContent = (urgentes ? "⚠️ " + urgentes + " emergência" + (urgentes > 1 ? "s" : "") + " aberta" + (urgentes > 1 ? "s" : "") + " · " : "")
+      + (ehAdmin(state.role) ? "Chamados de todos os usuários" : "Seus chamados com o suporte") + (andamento ? " · " + andamento + " em andamento" : "") + ".";
     if ($("dlg-chamados").open) desenharChamados();
   }
 
@@ -1245,13 +1299,15 @@
     const box = $("dc-lista"); box.replaceChildren();
     const admin = ehAdmin(state.role);
     if (!HOME.chamados.length) { box.appendChild(el("div", "dlg-vazio", "Nenhum chamado ainda.")); return; }
-    HOME.chamados.forEach(c => {
-      const it = el("div", "linha");
+    const lista = HOME.chamados.slice().sort((a, b) => (b.urgente ? 1 : 0) - (a.urgente ? 1 : 0));
+    lista.forEach(c => {
+      const it = el("div", "linha" + (c.urgente ? " urgente" : ""));
       const t = el("div", "grow");
-      t.appendChild(el("div", "nome", c.assunto));
+      t.appendChild(el("div", "nome", (c.urgente ? "🚨 " : "") + c.assunto));
       if (c.mensagem) t.appendChild(el("div", "turma", c.mensagem));
       t.appendChild(el("div", "turma", (admin ? (c.autor_nome || "Usuário") + " · " : "") + quando(c.criado_em)));
       it.appendChild(t);
+      if (c.urgente) it.appendChild(chip("URGENTE", "urgente"));
       it.appendChild(chip(STC[c.status][0], STC[c.status][1]));
       if (admin) {
         const prox = c.status === "aberto" ? ["em_andamento", "Atender"] : c.status === "em_andamento" ? ["resolvido", "Resolver"] : ["aberto", "Reabrir"];
@@ -1273,6 +1329,30 @@
     if (error) { $("dc-erro").textContent = "Não foi possível enviar o chamado. Tente novamente."; return; }
     e.target.reset(); $("dc-erro").textContent = ""; await carregarChamados();
   });
+
+  /* --- Emergência (responsáveis e motoristas avisam o colégio na hora) --- */
+  $("btn-emergencia").onclick = () => { $("em-erro").textContent = ""; $("f-emergencia").reset(); $("dlg-emergencia").showModal(); };
+  $("f-emergencia").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const mensagem = $("em-msg").value.trim();
+    if (!mensagem) return;
+    const { error } = await sb.from("chamados").insert({
+      autor_id: state.user.id, autor_nome: state.nome,
+      assunto: "Emergência", mensagem, urgente: true
+    });
+    if (error) { $("em-erro").textContent = "Não foi possível enviar. Tente de novo ou ligue para o colégio."; return; }
+    $("dlg-emergencia").close();
+    await carregarChamados();
+  });
+
+  function mostrarBannerEmergencia(c) {
+    $("be-titulo").textContent = "🚨 Emergência de " + (c.autor_nome || "um usuário");
+    $("be-msg").textContent = c.mensagem || c.assunto || "";
+    $("banner-emerg").hidden = false;
+    carregarChamados();
+  }
+  $("be-fechar").onclick = () => { $("banner-emerg").hidden = true; };
+  $("be-ver").onclick = () => { $("banner-emerg").hidden = true; abrirChamados(); };
 
   document.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => $(b.dataset.fechar).close()));
   document.querySelectorAll("[data-ir]").forEach(b => b.addEventListener("click", () => irPara(b.dataset.ir)));
@@ -1433,6 +1513,15 @@
     if (op) { carregarFrota(); setInterval(carregarFrota, 15000); }
     setInterval(carregarAvisos, 60000); setInterval(carregarChamados, 60000);
     sb.channel("avisos").on("postgres_changes", { event: "*", schema: "public", table: "avisos" }, () => carregarAvisos()).subscribe();
+
+    // Emergências: quem recebe (admin/comando) é avisado na hora, com banner,
+    // mesmo sem estar com o diálogo de chamados aberto.
+    if (ehAdmin(state.role)) {
+      sb.channel("chamados-urgentes")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "chamados" }, (p) => {
+          if (p.new && p.new.urgente) mostrarBannerEmergencia(p.new);
+        }).subscribe();
+    }
   })();
 </script>
 </body>
