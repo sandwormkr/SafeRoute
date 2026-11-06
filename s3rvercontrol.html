@@ -40,8 +40,8 @@
 
 <script>
   /* ===== Configuração (mesmo projeto do admin.html / command-post.html) ===== */
-  const SUPABASE_URL = "https://leekskdtvthqmgbwuvpi.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZWtza2R0dnRocW1nYnd1dnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDEyMTgsImV4cCI6MjEwNjcxNzIxOH0.u8et6VHb3dxmnpVR1lD5-l7j9vcrqdT9YEMp5Cy2tb4";
+  const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_PROJETO_SUPABASE";
+  const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_ANON_PUBLIC";
   const COMMAND_POST_URL = "command-post.html";
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -69,6 +69,10 @@
   const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR");
   const pad = (s, n) => (s || "").toString().slice(0, n).padEnd(n, " ");
+  // Nunca corta o conteúdo (só preenche até a largura mínima) — usado em
+  // colunas onde o valor pode ser mais longo que a largura "ideal" (nomes,
+  // e-mails), pra nunca grudar sem espaço no texto que vem depois.
+  const padNoCut = (s, n) => (s || "").toString().padEnd(n, " ");
 
   let meuId = null, meuNome = "comando";
   let modo = "boot";       // boot -> guest -> senha -> auth
@@ -207,7 +211,7 @@
   }
 
   function linhaLog(t) {
-    const linha = "[" + hora(t.criado_em) + "] " + pad(t.alvo, 13) + pad(t.nome_tentado, 19) + (t.sucesso ? "200 OK" : "403 DENIED");
+    const linha = "[" + hora(t.criado_em) + "] " + pad(t.alvo, 13) + " " + padNoCut(t.nome_tentado, 19) + " " + (t.sucesso ? "200 OK" : "403 DENIED");
     print(linha, t.sucesso ? "ok" : "err");
   }
 
@@ -242,11 +246,11 @@
       const { data, error } = await sb.from("operadores").select("nome, email, role").order("nome");
       if (error) { print("ERR-500 // falha ao consultar users.db: " + error.message, "err"); return; }
       print("-- users.db (" + (data || []).length + " identidades) --", "dim");
-      print(pad("NOME", 20) + pad("EMAIL", 29) + "NÍVEL", "dim");
+      print(padNoCut("NOME", 20) + " " + padNoCut("EMAIL", 30) + " " + pad("ROLE", 10) + " NÍVEL", "dim");
       (data || []).forEach(u => {
         const comando = u.role === "comando";
         const nivel = comando ? "COMANDO" + (u.email && meuEmail === u.email ? " (você)" : "") : "SEM ACESSO";
-        print(pad(u.nome || "—", 20) + pad(u.email || "—", 29) + nivel, comando ? "ok" : "dim");
+        print(padNoCut(u.nome || "—", 20) + " " + padNoCut(u.email || "—", 30) + " " + pad(u.role || "—", 10) + " " + nivel, comando ? "ok" : "dim");
       });
       return;
     }
