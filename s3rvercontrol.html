@@ -168,9 +168,11 @@
         "  whoami                                        identidade atual",
         "  clear                                         limpa a tela",
         "  logout                                        encerra a sessão",
-        "  run0 bordercommand --syslog [--follow]        audita acessos em tempo real",
-        "  run0 bordercommand --usersdb                  lista identidades registradas",
-        "  run0 bordercommand --roleuser -C|-X <nome>    concede/revoga COMANDO"
+        "  run0 bordercommand --syslog [--follow]                    audita acessos em tempo real",
+        "  run0 bordercommand --usersdb                              lista identidades dos dois sistemas",
+        "  run0 bordercommand --roleuser <nome> --role <cargo>       define o cargo de um usuário",
+        "    cargos disponíveis: responsavel, motorista, administrador (Rota Segura)",
+        "                        operador, comando (Border Eagles)"
       ], "dim");
       return;
     }
@@ -210,6 +212,17 @@
     ps.textContent = (modo === "auth" ? "comando" : "guest") + "@eagles:~$";
   }
 
+  // Cargos que o --roleuser consegue definir, e em qual tabela cada um mora.
+  // "operador"/"comando" ficam em Border Eagles (operadores); os outros três
+  // ficam em Rota Segura (perfis) — mesmo projeto Supabase, tabelas diferentes.
+  const PAPEIS = {
+    responsavel:   { tabela: "perfis",     valor: "responsavel" },
+    motorista:     { tabela: "perfis",     valor: "motorista" },
+    administrador: { tabela: "perfis",     valor: "administrador" },
+    operador:      { tabela: "operadores", valor: "operador" },
+    comando:       { tabela: "operadores", valor: "comando" }
+  };
+
   function linhaLog(t) {
     const linha = "[" + hora(t.criado_em) + "] " + pad(t.alvo, 13) + " " + padNoCut(t.nome_tentado, 19) + " " + (t.sucesso ? "200 OK" : "403 DENIED");
     print(linha, t.sucesso ? "ok" : "err");
@@ -243,38 +256,67 @@
     }
 
     if (flag === "--usersdb") {
-      const { data, error } = await sb.from("operadores").select("nome, email, role").order("nome");
-      if (error) { print("ERR-500 // falha ao consultar users.db: " + error.message, "err"); return; }
-      print("-- users.db (" + (data || []).length + " identidades) --", "dim");
-      print(padNoCut("NOME", 20) + " " + padNoCut("EMAIL", 30) + " " + pad("ROLE", 10) + " NÍVEL", "dim");
-      (data || []).forEach(u => {
-        const comando = u.role === "comando";
-        const nivel = comando ? "COMANDO" + (u.email && meuEmail === u.email ? " (você)" : "") : "SEM ACESSO";
-        print(padNoCut(u.nome || "—", 20) + " " + padNoCut(u.email || "—", 30) + " " + pad(u.role || "—", 10) + " " + nivel, comando ? "ok" : "dim");
-      });
+      const [opRes, pfRes] = await Promise.all([
+        sb.from("operadores").select("nome, email, role").order("nome"),
+        sb.from("perfis").select("nome, email, role").order("nome")
+      ]);
+
+      print("-- users.db / Border Eagles (operadores) --", "dim");
+      if (opRes.error) {
+        print("ERR-500 // " + opRes.error.message, "err");
+      } else {
+        print(padNoCut("NOME", 20) + " " + padNoCut("EMAIL", 30) + " " + pad("ROLE", 12) + " NÍVEL", "dim");
+        (opRes.data || []).forEach(u => {
+          const comando = u.role === "comando";
+          const nivel = comando ? "COMANDO" + (u.email && meuEmail === u.email ? " (você)" : "") : "SEM ACESSO";
+          print(padNoCut(u.nome || "—", 20) + " " + padNoCut(u.email || "—", 30) + " " + pad(u.role || "—", 12) + " " + nivel, comando ? "ok" : "dim");
+        });
+      }
+
+      print("", "dim");
+      print("-- users.db / Rota Segura (perfis) --", "dim");
+      if (pfRes.error) {
+        print("ERR-500 // " + pfRes.error.message, "err");
+      } else {
+        print(padNoCut("NOME", 20) + " " + padNoCut("EMAIL", 30) + " ROLE", "dim");
+        (pfRes.data || []).forEach(u => {
+          const admin = u.role === "administrador" || u.role === "comando";
+          print(padNoCut(u.nome || "—", 20) + " " + padNoCut(u.email || "—", 30) + " " + (u.role || "—"), admin ? "ok" : "dim");
+        });
+      }
       return;
     }
 
     if (flag === "--roleuser") {
-      const m = (args[1] || "").match(/^-([A-Za-z])$/);
-      if (!m) { print("ERR-422 // sintaxe: run0 bordercommand --roleuser -C|-X <nome>", "err"); return; }
-      const fl = m[1].toUpperCase();
-      if (fl !== "C" && fl !== "X") { print("ERR-422 // flag inválida “-" + m[1] + "”. Suportadas: -C (conceder), -X (revogar).", "err"); return; }
-      const nome = args.slice(2).join(" ");
+      const ir = args.indexOf("--role");
+      const nome = (ir > 0 ? args.slice(1, ir) : []).join(" ");
+      const valor = (ir > 0 ? args[ir + 1] : "") || "";
+
+      if (ir < 1 || !valor) {
+        print("ERR-422 // sintaxe: run0 bordercommand --roleuser <nome> --role <cargo>", "err");
+        print("cargos: responsavel, motorista, administrador, operador, comando", "dim");
+        return;
+      }
+      const papel = PAPEIS[valor.toLowerCase()];
+      if (!papel) {
+        print("ERR-422 // cargo inválido “" + valor + "”. Use: responsavel, motorista, administrador, operador ou comando.", "err");
+        return;
+      }
       if (!nome) { print("ERR-422 // nome de usuário não informado.", "err"); return; }
 
-      const { data: candidatos, error: e1 } = await sb.from("operadores").select("id, nome, role").ilike("nome", nome);
-      if (e1) { print("ERR-500 // falha ao consultar users.db: " + e1.message, "err"); return; }
+      const { data: candidatos, error: e1 } = await sb.from(papel.tabela).select("id, nome, role").ilike("nome", nome);
+      if (e1) { print("ERR-500 // falha ao consultar " + papel.tabela + ": " + e1.message, "err"); return; }
       const alvo = (candidatos || []).find(u => norm(u.nome) === norm(nome)) || (candidatos || [])[0];
-      if (!alvo) { print("ERR-404 // usuário “" + nome.slice(0, 30) + "” não encontrado em users.db.", "err"); return; }
-      if (alvo.id === meuId && fl === "X") { print("ERR-403 // operação bloqueada: não é permitido revogar a própria identidade.", "err"); return; }
+      if (!alvo) { print("ERR-404 // usuário “" + nome.slice(0, 30) + "” não encontrado em " + papel.tabela + ".", "err"); return; }
+      if (alvo.id === meuId && papel.tabela === "operadores" && papel.valor !== "comando") {
+        print("ERR-403 // operação bloqueada: isso revogaria seu próprio acesso ao EaglesOS.", "err");
+        return;
+      }
 
-      const antes = alvo.role === "comando" ? "COMANDO" : "SEM ACESSO";
-      const novoRole = (fl === "C") ? "comando" : "operador";
-      const { error: e2 } = await sb.from("operadores").update({ role: novoRole }).eq("id", alvo.id);
+      const antes = alvo.role || "—";
+      const { error: e2 } = await sb.from(papel.tabela).update({ role: papel.valor }).eq("id", alvo.id);
       if (e2) { print("ERR-500 // falha ao alterar cargo: " + e2.message, "err"); return; }
-      const depois = novoRole === "comando" ? "COMANDO" : "SEM ACESSO";
-      print("200 OK // " + alvo.nome + ": " + antes + " → " + depois, "ok");
+      print("200 OK // " + alvo.nome + " [" + papel.tabela + "]: " + antes + " → " + papel.valor, "ok");
       return;
     }
 
