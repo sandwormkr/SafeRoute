@@ -139,8 +139,8 @@
       </button>
       <div class="msg" id="msg" role="status" aria-live="polite"></div>
       <div class="acoes-evento" id="acoes-evento" hidden>
-        <button class="mini evento" type="button" id="btn-embarque">🧒⬆️ Confirmar embarque</button>
-        <button class="mini evento" type="button" id="btn-desembarque">🧒⬇️ Confirmar desembarque</button>
+        <button class="mini evento" type="button" id="btn-embarque">Confirmar embarque</button>
+        <button class="mini evento" type="button" id="btn-desembarque">Confirmar desembarque</button>
       </div>
       <div class="metricas">
         <div class="metrica"><span>Último envio</span><b id="m-envio">--</b></div>
@@ -366,7 +366,7 @@
   /* ===== Confirmação de embarque / desembarque ===== */
   // Grava um evento junto da última posição (mesma linha de "localizacoes"),
   // e o painel dos responsáveis mostra um popup em cima do ícone do ônibus.
-  const EVENTO_TEXTO = { embarque: "🧒⬆️ Embarque confirmado", desembarque: "🧒⬇️ Desembarque confirmado" };
+  const EVENTO_TEXTO = { embarque: "Embarque confirmado", desembarque: "Desembarque confirmado" };
 
   function mostrarPopupEvento(tipo) {
     if (!meuPin) return;
