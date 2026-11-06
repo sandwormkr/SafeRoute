@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BORDER EAGLES · INTEL BRIEF</title>
+<title>Admin · Border Eagles</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -113,22 +113,22 @@
   <div class="brasao"><img src="crest.png" alt="Brasão Border Eagles · Colégio Roosevelt"></div>
   <h1>BORDER EAGLES</h1>
   <p class="lema">DISCIPLINA · VIGILÂNCIA · FRONTEIRAS</p>
-  <p class="unidade">UNIDADE #36809 — INTEL BRIEF</p>
+  <p class="unidade">UNIDADE #36809 — PAINEL ADMINISTRATIVO</p>
 
   <div class="boot" id="boot">
     <div>&gt; inicializando canal seguro...</div>
     <div>&gt; verificando integridade do terminal... <b>OK</b></div>
-    <div>&gt; aguardando credenciais do operador...</div>
-    <div>operador@fronteira:~$ <span class="cursor"></span></div>
+    <div>&gt; aguardando credenciais do administrador...</div>
+    <div>admin@fronteira:~$ <span class="cursor"></span></div>
   </div>
 
   <form id="form" novalidate>
     <div>
-      <p class="prompt">operador@fronteira:~$ <b>login --id</b></p>
-      <div class="campo"><input id="login" type="text" autocomplete="username" placeholder="id do operador" required></div>
+      <p class="prompt">admin@fronteira:~$ <b>login --id</b></p>
+      <div class="campo"><input id="login" type="text" autocomplete="username" placeholder="id do administrador" required></div>
     </div>
     <div>
-      <p class="prompt">operador@fronteira:~$ <b>login --senha</b></p>
+      <p class="prompt">admin@fronteira:~$ <b>login --senha</b></p>
       <div class="campo">
         <input id="senha" type="password" autocomplete="current-password" placeholder="••••••••" required>
         <button class="ver" type="button" id="ver">MOSTRAR</button>
@@ -139,7 +139,7 @@
   </form>
 
   <div class="rodape">
-    Acesso restrito a operadores cadastrados pelo Comando.<br>
+    Acesso restrito a administradores cadastrados pelo Comando.<br>
     Sem credenciais? <b>Solicite liberação ao Comando</b> pelo canal interno.<br>
     Toda tentativa de acesso é registrada no Command Post.
   </div>
@@ -147,8 +147,10 @@
 
 <script>
   /* ===== Configuração =====
-     Projeto Supabase separado do Rota Segura. Preencha com os dados do novo projeto. */
-  
+     Mesmo projeto Supabase do command-post.html / eaglesos.html. */
+  const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SEU_PROJETO_SUPABASE";
+  const SUPABASE_ANON_KEY = "COLE_AQUI_A_CHAVE_ANON_PUBLIC";
+
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const $ = (id) => document.getElementById(id);
   const form = $("form"), enviar = $("enviar"), status = $("status");
@@ -161,10 +163,11 @@
 
   function marcar(txt, tipo) { status.textContent = txt; status.className = "status" + (tipo ? " " + tipo : ""); }
 
-  // Registra a tentativa (nome digitado + resultado), sem IP e sem senha.
+  // Honeypot: registra só o nome digitado e o resultado (sucesso/falha), sem IP e sem senha.
+  // Mesmo um login válido aqui não abre nada — só alimenta o log do Command Post / EaglesOS.
   async function registrar(nome, sucesso) {
     try {
-      await sb.from("tentativas_acesso").insert({ alvo: "intel-brief", nome_tentado: nome, sucesso });
+      await sb.from("tentativas_acesso").insert({ alvo: "admin", nome_tentado: nome, sucesso });
     } catch (e) { console.warn("Registro:", e.message || e); }
   }
 
@@ -189,7 +192,7 @@
     const nome = (data.user.user_metadata && data.user.user_metadata.nome) || login;
     await registrar(nome, true);
     marcar("> ACESSO CONCEDIDO, " + nome + ".\n> solicitação enviada ao Command Post.\n> aguarde autorização.", "ok");
-    await sb.auth.signOut(); // o Intel Brief só registra a tentativa; não há painel aqui
+    await sb.auth.signOut(); // este painel só registra a tentativa; não há acesso real aqui
     enviar.disabled = false;
     form.reset();
   });
