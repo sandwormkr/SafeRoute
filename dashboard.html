@@ -609,7 +609,11 @@
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const $ = (id) => document.getElementById(id);
 
-  const ROLES = { responsavel: "Responsável", motorista: "Motorista", administrador: "Administrador" };
+  const ROLES = { responsavel: "Responsável", motorista: "Motorista", administrador: "Administrador", comando: "Comando" };
+  // "comando" é tratado como um apelido de administrador nesta tela (mesmo
+  // nível de acesso, rótulo diferente) — usado por quem também acessa o
+  // Border Eagles com o cargo "comando".
+  const ehAdmin = (r) => r === "administrador" || r === "comando";
   let state = { role: "responsavel", alunos: [] };
 
   /* ===== Utilidades ===== */
@@ -630,7 +634,7 @@
     });
     $("titulo").textContent = TITULOS[view];
     if (view === "maps" && state.pronto) abrirMapa();
-    if (state.role === "administrador") {
+    if (ehAdmin(state.role)) {
       if (view === "rotas") carregarRotasAdmin();
       if (view === "escolas") carregarEscolasAdmin();
       if (view === "pessoas") carregarPessoas();
@@ -786,7 +790,7 @@
     state.papel = role !== "responsavel" ? role : (meta.perfil === "motorista" ? "motorista" : "responsavel");
     $("nav-motorista").hidden = state.papel === "responsavel";
     state.nome = nome;
-    const admin = state.role === "administrador";
+    const admin = ehAdmin(state.role);
     document.querySelectorAll(".gestao").forEach(n => { n.hidden = !admin; });
     $("card-atalhos").hidden = !admin;
     $("novo-aviso").hidden = !(admin || state.role === "motorista");
@@ -798,7 +802,7 @@
 
   async function carregarAlunos(user) {
     try {
-      if (state.role === "administrador") {
+      if (ehAdmin(state.role)) {
         const { data, error } = await sb.from("alunos").select("id, nome, turma").order("nome");
         if (error) throw error;
         return data || [];
@@ -841,7 +845,7 @@
     const alunos = state.alunos;
     const papel = state.papel;
 
-    if (papel === "administrador") {
+    if (ehAdmin(papel)) {
       $("a-titulo").textContent = "Alunos cadastrados";
       $("a-legenda").textContent = alunos.length + (alunos.length === 1 ? " aluno" : " alunos") + " no sistema.";
       $("ver-todos").hidden = false;
@@ -1159,7 +1163,7 @@
   function desenharPartidas() {
     const box = $("p-lista"); box.replaceChildren();
     const rs = HOME.rotas.filter(rotaHoje).sort((a, b) => minDe(a.partida) - minDe(b.partida));
-    if (!rs.length) { box.appendChild(el("div", "dlg-vazio", state.role === "administrador" ? "Nenhuma rota para hoje. Cadastre em Rotas." : "Nenhuma rota cadastrada para hoje.")); return; }
+    if (!rs.length) { box.appendChild(el("div", "dlg-vazio", ehAdmin(state.role) ? "Nenhuma rota para hoje. Cadastre em Rotas." : "Nenhuma rota cadastrada para hoje.")); return; }
     let proxima = true;
     rs.forEach(r => {
       const st = statusRota(r);
@@ -1202,7 +1206,7 @@
       if (a.mensagem) t.appendChild(el("p", null, a.mensagem));
       t.appendChild(el("small", null, (a.autor_nome || "Escola") + " · " + (a.meteo ? "agora" : quando(a.criado_em))));
       it.appendChild(t);
-      if (!a.meteo && (state.role === "administrador" || (state.user && a.autor_id === state.user.id))) {
+      if (!a.meteo && (ehAdmin(state.role) || (state.user && a.autor_id === state.user.id))) {
         const x = el("button", "fechar", "×"); x.type = "button"; x.setAttribute("aria-label", "Remover aviso");
         x.onclick = async () => { await sb.from("avisos").delete().eq("id", a.id); carregarAvisos(); };
         it.appendChild(x);
@@ -1215,7 +1219,7 @@
   $("f-aviso").addEventListener("submit", async (e) => {
     e.preventDefault();
     const titulo = $("av-titulo").value.trim(); if (!titulo) return;
-    const prefixo = state.role === "administrador" ? "Escola" : "Motorista";
+    const prefixo = state.role === "comando" ? "Comando" : state.role === "administrador" ? "Escola" : "Motorista";
     const { error } = await sb.from("avisos").insert({
       titulo, mensagem: $("av-msg").value.trim() || null, nivel: $("av-nivel").value,
       autor_id: state.user.id, autor_nome: prefixo + " · " + state.nome,
@@ -1233,13 +1237,13 @@
     const andamento = abertos.filter(c => c.status === "em_andamento").length;
     $("ch-num").textContent = abertos.length;
     $("ch-txt").textContent = abertos.length === 1 ? "ocorrência aberta" : "ocorrências abertas";
-    $("ch-legenda").textContent = (state.role === "administrador" ? "Chamados de todos os usuários" : "Seus chamados com o suporte") + (andamento ? " · " + andamento + " em andamento" : "") + ".";
+    $("ch-legenda").textContent = (ehAdmin(state.role) ? "Chamados de todos os usuários" : "Seus chamados com o suporte") + (andamento ? " · " + andamento + " em andamento" : "") + ".";
     if ($("dlg-chamados").open) desenharChamados();
   }
 
   function desenharChamados() {
     const box = $("dc-lista"); box.replaceChildren();
-    const admin = state.role === "administrador";
+    const admin = ehAdmin(state.role);
     if (!HOME.chamados.length) { box.appendChild(el("div", "dlg-vazio", "Nenhum chamado ainda.")); return; }
     HOME.chamados.forEach(c => {
       const it = el("div", "linha");
@@ -1360,7 +1364,7 @@
       t.appendChild(el("div", "turma", p.email || ""));
       li.appendChild(t);
       const cargo = el("select"); cargo.setAttribute("aria-label", "Cargo");
-      [["responsavel", "Responsável"], ["motorista", "Motorista"], ["administrador", "Administrador"]].forEach(([v, n]) => cargo.appendChild(new Option(n, v)));
+      [["responsavel", "Responsável"], ["motorista", "Motorista"], ["administrador", "Administrador"], ["comando", "Comando"]].forEach(([v, n]) => cargo.appendChild(new Option(n, v)));
       cargo.value = p.role; cargo.disabled = p.id === state.user.id;
       cargo.onchange = async () => {
         const { error } = await sb.from("perfis").update({ role: cargo.value }).eq("id", p.id);
