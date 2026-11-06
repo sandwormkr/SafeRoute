@@ -281,22 +281,59 @@
     print("ERR-400 // flag desconhecida. Use --syslog, --usersdb ou --roleuser.", "err");
   }
 
-  /* ===== Portão real: exige sessão com cargo "comando" ===== */
+  /* ===== Portão real: exige sessão com cargo "comando" =====
+     Tudo aqui dentro é protegido por try/catch: se a sessão ainda não tiver
+     sido persistida (redirect rápido demais do command-post.html), se a
+     rede estiver lenta ou se a consulta falhar por qualquer motivo, a tela
+     mostra um erro visível em vez de ficar muda e com o input travado. */
   let meuEmail = null;
   (async function iniciar() {
-    const { data } = await sb.auth.getSession();
-    if (!data || !data.session) { window.location.href = COMMAND_POST_URL; return; }
-    const { data: perfil } = await sb.from("operadores").select("role, nome, email").eq("id", data.session.user.id).maybeSingle();
-    if (!perfil || perfil.role !== "comando") {
-      await sb.auth.signOut();
-      window.location.href = COMMAND_POST_URL;
-      return;
+    print("Verificando sessão...", "dim");
+    try {
+      let { data } = await sb.auth.getSession();
+
+      // O redirect do command-post.html às vezes chega aqui antes da sessão
+      // terminar de ser gravada no localStorage. Tenta de novo algumas vezes
+      // antes de desistir, em vez de já mandar de volta na primeira falha.
+      for (let tentativa = 0; tentativa < 5 && (!data || !data.session); tentativa++) {
+        await new Promise((r) => setTimeout(r, 300));
+        ({ data } = await sb.auth.getSession());
+      }
+      if (!data || !data.session) {
+        print("Sessão não encontrada. Redirecionando ao Command Post...", "warn");
+        setTimeout(() => { window.location.href = COMMAND_POST_URL; }, 700);
+        return;
+      }
+
+      const { data: perfil, error: erroPerfil } = await sb
+        .from("operadores").select("role, nome, email")
+        .eq("id", data.session.user.id).maybeSingle();
+
+      if (erroPerfil) {
+        print("ERR-500 // falha ao verificar permissões: " + erroPerfil.message, "err");
+        print("Recarregue a página ou tente novamente em instantes.", "dim");
+        inp.disabled = false; inp.focus();
+        return;
+      }
+      if (!perfil || perfil.role !== "comando") {
+        print("ACESSO NEGADO: nível insuficiente. Redirecionando...", "err");
+        await sb.auth.signOut();
+        setTimeout(() => { window.location.href = COMMAND_POST_URL; }, 900);
+        return;
+      }
+
+      meuId = data.session.user.id;
+      meuNome = perfil.nome || "comando";
+      meuEmail = perfil.email;
+      out.replaceChildren();
+      print("Booting EaglesOS...", "dim");
+      boot(0);
+    } catch (e) {
+      console.error(e);
+      print("ERR-500 // falha inesperada ao iniciar: " + (e && e.message ? e.message : e), "err");
+      print("Recarregue a página. Se persistir, refaça o login pelo Command Post.", "dim");
+      inp.disabled = false; inp.focus();
     }
-    meuId = data.session.user.id;
-    meuNome = perfil.nome || "comando";
-    meuEmail = perfil.email;
-    print("Booting EaglesOS...", "dim");
-    boot(0);
   })();
 </script>
 </body>
