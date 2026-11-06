@@ -3,253 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EaglesOS · Command Center</title>
+<title>EaglesOS · Tactical Shell</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#000;--surface:#000;--border:#2f4a36;--text:#00d92b;--muted:#4f7a58;--ok:#00ff2a;--warn:#f59e0b;--bad:#ef4444;--font:'Courier New',Courier,monospace;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font:13px/1.5 var(--font);min-height:100vh;padding:20px 14px}
-[hidden]{display:none!important}
-button,input,select{font:inherit;color:inherit;background:transparent;border:0}
-:focus-visible{outline:1px solid var(--ok);outline-offset:2px}
-.banner,.app{max-width:1040px;margin:0 auto}
-.banner{padding:8px 12px;margin-bottom:14px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px}
-.banner b{color:var(--ok)} .banner code{color:var(--warn)}
-.app{border:1px solid var(--border);background:var(--surface);box-shadow:0 0 0 1px rgba(16,185,129,.05),0 20px 40px rgba(0,0,0,.5)}
-.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
-.brand{display:flex;align-items:center;gap:10px}
-.brand h1{font-size:15px;letter-spacing:.14em;color:var(--ok);text-shadow:0 0 6px rgba(0,255,42,.45)}
-.pill{font-size:10px;padding:2px 7px;border:1px solid var(--ok);color:var(--ok)}
-.pill.on{color:var(--ok);border-color:rgba(16,185,129,.4)}
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:p 2s infinite}
-.alerting .pulse{background:var(--bad);box-shadow:0 0 8px var(--bad)}
-@keyframes p{50%{opacity:.3}}
-.tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto}
-.tab{padding:10px 16px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
-.tab:hover{color:var(--text)} .tab[aria-selected=true]{color:var(--ok);border-bottom-color:var(--ok)}
-.content{padding:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
-.card{background:var(--bg);border:1px solid var(--border);padding:10px 14px}
-.card .l{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.card .v{font-size:20px;font-weight:500;color:var(--ok)}
-.card.warn{border-color:rgba(245,158,11,.5)} .card.warn .v{color:var(--warn)}
-.card.bad{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.07)} .card.bad .v{color:var(--bad)}
-.card.good .v{color:var(--ok)}
-.ph{display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px;color:var(--muted)}
-.ph b{color:var(--text);font-weight:500}
-.tw{background:var(--bg);border:1px solid var(--border);overflow-x:auto;max-height:420px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;white-space:nowrap}
-th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);font-size:12px}
-th{color:var(--muted);font-weight:500;position:sticky;top:0;background:var(--bg)}
-tr:last-child td{border-bottom:0}
-tr.falha td{background:rgba(239,68,68,.03)} tr.alerta td:first-child{border-left:2px solid var(--bad)}
-tr.novo{animation:hl 1s}
-@keyframes hl{from{background:rgba(16,185,129,.15)}}
-.badge{padding:2px 6px;font-size:10px;border:1px solid}
-.badge.s{color:var(--ok);border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
-.badge.d{color:var(--bad);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
-.badge.w{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
-.search{width:100%;max-width:300px;background:var(--bg);border:1px solid var(--border);padding:8px 12px;margin-bottom:14px}
-.search:focus{border-color:var(--ok)}
-.you{color:var(--ok);font-size:10px;margin-left:6px}
-.term{background:var(--bg);border:1px solid var(--border);height:400px;display:flex;flex-direction:column}
-.out{flex:1;overflow-y:auto;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px}
-.out .ok{color:var(--ok)} .out .err{color:var(--bad)} .out .wrn{color:var(--warn)} .out .dim{color:var(--muted)} .out .cmd{color:#b6ffc4}
-.inl input{background:#031403;caret-color:var(--ok)}.inl{display:flex;gap:8px;border-top:1px solid var(--border);padding:10px 12px;align-items:center}
-.inl .ps{color:var(--ok);white-space:nowrap} .inl input{flex:1;min-width:0}
-.hint{margin-top:10px;font-size:11px;color:var(--muted)} .hint code{color:var(--warn)}
-@media(max-width:600px){body{padding:8px}.grid{grid-template-columns:repeat(2,1fr)}}
+  :root { --bg:#000; --fg:#1fe05a; --dim:#166a34; --bad:#ff4d4d; --warn:#e8c547; color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; }
+  body {
+    font: 14px/1.5 "Courier New", Courier, monospace; color: var(--fg); background: #000;
+    padding: 10px 12px env(safe-area-inset-bottom,10px) 10px;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  #out { flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  #out .dim { color: var(--dim); }
+  #out .ok { color: var(--fg); }
+  #out .err { color: var(--bad); }
+  #out .warn { color: var(--warn); }
+  #out .cmd { color: #c9ffd6; }
+  .linha-cmd { display: flex; gap: 8px; align-items: center; padding-top: 6px; flex: none; }
+  #ps { white-space: nowrap; color: var(--fg); }
+  #in { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--fg); font: inherit; caret-color: var(--fg); }
+  #in.blind { -webkit-text-security: disc; text-security: disc; }
+  #in::selection { background: var(--fg); color: #000; }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--dim); }
+  ::-webkit-scrollbar-track { background: #000; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
-<div class="banner"><b>EaglesOS Demo Mode</b> — dados simulados localmente. Chave de autorização da demo: <code>192.168.0.1@adsumusconfig</code></div>
-
-<div class="app" id="app">
-  <header class="head">
-    <div class="brand"><span class="pulse"></span><h1>EAGLESOS // COMMAND CENTER</h1><span class="pill">v3.0.0-tac</span></div>
-    <div style="display:flex;gap:8px;align-items:center"><span class="pill" id="sess">SESSÃO: NÃO AUTENTICADA</span><button class="pill" type="button" id="sair" style="cursor:pointer">system.exit()</button></div>
-  </header>
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="t-log" aria-selected="true" type="button">system.log</button>
-    <button class="tab" role="tab" id="t-users" aria-selected="false" type="button">users.db</button>
-    <button class="tab" role="tab" id="t-cli" aria-selected="false" type="button">system.cli</button>
-  </nav>
-
-  <div class="content">
-    <section id="v-log">
-      <div class="grid">
-        <div class="card good" id="c-def"><span class="l">DEFCON</span><div class="v" id="s-def">5</div></div>
-        <div class="card" id="c-int"><span class="l">System Integrity</span><div class="v" id="s-int">100%</div></div>
-        <div class="card"><span class="l">Active Nodes</span><div class="v" id="s-nodes">12</div></div>
-        <div class="card" id="c-al"><span class="l">Active Alerts</span><div class="v" id="s-al">0</div></div>
-        <div class="card"><span class="l">Requests</span><div class="v" id="s-tot">0</div></div>
-        <div class="card"><span class="l">Authorized / Denied</span><div class="v"><span id="s-ok" style="color:var(--ok)">0</span> / <span id="s-fail" style="color:var(--bad)">0</span></div></div>
-      </div>
-      <div class="ph"><b>Realtime Access Audit</b><span id="upd">--:--:--</span></div>
-      <div class="tw"><table><thead><tr><th>TIMESTAMP</th><th>RESOURCE</th><th>IDENTITY</th><th>DETAIL</th><th>STATUS</th></tr></thead><tbody id="tbody"></tbody></table></div>
-    </section>
-
-    <section id="v-users" hidden>
-      <input class="search" type="search" id="busca" placeholder="Filtrar por usuário ou e-mail...">
-      <div class="ph"><b>Registered System Identities</b><span id="u-tot">0</span></div>
-      <div class="tw"><table><thead><tr><th>USER</th><th>EMAIL</th><th>ROLE</th><th>ENTRY</th></tr></thead><tbody id="u-body"></tbody></table></div>
-      <p class="hint">Somente o nível <code>-C</code> (Comando) tem entrada permitida no EaglesOS.</p>
-    </section>
-
-    <section id="v-cli" hidden>
-      <div class="term">
-        <div class="out" id="out" aria-live="polite"></div>
-        <form class="inl" id="form" autocomplete="off"><span class="ps" id="ps">guest@eagles:~$</span><input id="in" type="text" spellcheck="false" autocapitalize="off" aria-label="Comando"></form>
-      </div>
-      <p class="hint">Sintaxe: <code>run0 bordercommand --roleuser [-C|-O|-V] [NOME]</code> · digite <code>help</code> para ajuda.</p>
-    </section>
-  </div>
+<pre id="out"></pre>
+<div class="linha-cmd">
+  <span id="ps">guest@eagles:~$</span>
+  <input id="in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" aria-label="Comando" disabled>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-const KEY="192.168.0.1@adsumusconfig";
-const ROLES={C:{k:"admin",n:"COMANDO",entry:true},O:{k:"operador",n:"OPERADOR",entry:false},V:{k:"vigilancia",n:"VIGILÂNCIA",entry:false}};
-const ROLE_BY_KEY={admin:ROLES.C,operador:ROLES.O,vigilancia:ROLES.V};
-const now=Date.now();
-let logs=[
- {h:now-2*60e3,alvo:"srv-intel",nome:"Operador Silva",det:"GET /brief",ok:true},
- {h:now-6*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
- {h:now-9*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
- {h:now-11*60e3,alvo:"srv-intel",nome:"desconhecido",det:"GET /brief",ok:false},
- {h:now-15*60e3,alvo:"srv-post",nome:"Comando",det:"GET /post",ok:true},
- {h:now-22*60e3,alvo:"srv-intel",nome:"Operador Costa",det:"GET /brief",ok:true}
-];
-let users=[
- {nome:"Capitão Almeida",email:"almeida@eagles.os",role:"admin",voce:true},
- {nome:"Operador Silva",email:"silva@eagles.os",role:"operador"},
- {nome:"Operador Costa",email:"costa@eagles.os",role:"operador"},
- {nome:"Sargento Ferreira",email:"ferreira@eagles.os",role:"vigilancia"},
- {nome:"Tenente Ramos",email:"ramos@eagles.os",role:"admin"}
-];
-let session=null, history=[], hi=0;
-const FAKE=["desconhecido","admin","root","teste123","operador.x"];
+  /* ===== Configuração (mesmo projeto do intel-brief.html / command-post.html) ===== */
+  const SUPABASE_URL = "https://leekskdtvthqmgbwuvpi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZWtza2R0dnRocW1nYnd1dnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDEyMTgsImV4cCI6MjEwNjcxNzIxOH0.u8et6VHb3dxmnpVR1lD5-l7j9vcrqdT9YEMp5Cy2tb4";
+  const COMMAND_POST_URL = "command-post.html";
 
-/* Tabs */
-const TABS=["log","users","cli"];
-TABS.forEach(t=>$("t-"+t).onclick=()=>tab(t));
-function tab(a){TABS.forEach(t=>{$("t-"+t).setAttribute("aria-selected",String(t===a));$("v-"+t).hidden=t!==a});
- if(a==="users")drawUsers(); if(a==="cli")$("in").focus();}
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* Audit */
-function recentFails(nome,ate){return logs.filter(t=>t.nome===nome&&!t.ok&&t.h>=ate-3600e3&&t.h<=ate).length}
-function alertNames(){return new Set(logs.filter(t=>!t.ok&&recentFails(t.nome,t.h)>=3).map(t=>t.nome))}
-function addLog(alvo,nome,det,ok){logs.push({h:Date.now(),alvo,nome,det,ok,novo:true});if(logs.length>60)logs.shift();drawLog()}
-function drawLog(){
- const ok=logs.filter(t=>t.ok).length,fail=logs.length-ok,al=alertNames();
- const n=al.size,def=n>=3?2:n===2?3:n===1?4:5,integ=Math.max(40,100-n*12-Math.min(fail,15));
- $("s-tot").textContent=logs.length;$("s-ok").textContent=ok;$("s-fail").textContent=fail;$("s-al").textContent=n;
- $("s-def").textContent=def;$("s-int").textContent=integ+"%";
- $("c-al").className="card"+(n?" bad":"");
- $("c-def").className="card "+(def>=5?"good":def>=4?"warn":"bad");
- $("c-int").className="card"+(integ<70?" bad":integ<90?" warn":"");
- $("app").classList.toggle("alerting",n>0);
- $("upd").textContent=new Date().toLocaleTimeString("pt-BR");
- const tb=$("tbody");tb.replaceChildren();
- logs.slice().sort((a,b)=>b.h-a.h).forEach(t=>{
-  const tr=document.createElement("tr");
-  if(!t.ok)tr.className="falha"; if(al.has(t.nome))tr.classList.add("alerta");
-  if(t.novo){tr.classList.add("novo");delete t.novo}
-  const cells=[new Date(t.h).toLocaleTimeString("pt-BR"),t.alvo,t.nome,t.det||"-"];
-  cells.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});
-  const td=document.createElement("td"),b=document.createElement("span");
-  b.className="badge "+(t.ok?"s":"d");b.textContent=t.ok?"200 OK":"403 DENIED";td.appendChild(b);tr.appendChild(td);
-  tb.appendChild(tr);
- });
-}
+  const out = document.getElementById("out");
+  const inp = document.getElementById("in");
+  const ps  = document.getElementById("ps");
 
-/* Users */
-function drawUsers(){
- const f=$("busca").value.trim().toLowerCase();
- const list=users.filter(o=>!f||o.nome.toLowerCase().includes(f)||o.email.toLowerCase().includes(f));
- $("u-tot").textContent=users.length+" registros";
- const tb=$("u-body");tb.replaceChildren();
- list.forEach(o=>{
-  const tr=document.createElement("tr");
-  const a=document.createElement("td");a.textContent=o.nome;
-  if(o.voce){const s=document.createElement("span");s.className="you";s.textContent="(você)";a.appendChild(s)}
-  const b=document.createElement("td");b.textContent=o.email;
-  const c=document.createElement("td"),sel=document.createElement("select");
-  sel.style.cssText="background:var(--bg);border:1px solid var(--border);padding:3px 6px;font-size:11px";
-  Object.values(ROLES).forEach(r=>{const op=document.createElement("option");op.value=r.k;op.textContent=r.n;if(r.k===o.role)op.selected=true;sel.appendChild(op)});
-  sel.disabled=true;sel.title="Altere cargos via system.cli";c.appendChild(sel);
-  const d=document.createElement("td"),bd=document.createElement("span"),ent=ROLE_BY_KEY[o.role].entry;
-  bd.className="badge "+(ent?"s":"w");bd.textContent=ent?"PERMITIDA":"NEGADA";d.appendChild(bd);
-  tr.append(a,b,c,d);tb.appendChild(tr);
- });
-}
-$("busca").addEventListener("input",drawUsers);
+  function print(txt, cls) {
+    const d = document.createElement("div");
+    if (cls) d.className = cls;
+    d.textContent = txt;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+  }
+  function printLines(lines, cls) { lines.forEach(l => print(l, cls)); }
 
-/* CLI */
-function print(txt,cls){const d=document.createElement("div");if(cls)d.className=cls;d.textContent=txt;$("out").appendChild(d);$("out").scrollTop=1e9}
-const stamp=()=>"["+new Date().toLocaleTimeString("pt-BR")+"]";
-const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-function who(){return session?session.nome:"anon"}
-function fail(det,msg,code){addLog("cli.bordercommand","cli:"+who(),det,false);print(stamp()+" ERR-"+code+" // "+msg,"err")}
-function setSession(s){session=s;$("sess").textContent=s?"SESSÃO: "+s.nome.toUpperCase():"SESSÃO: NÃO AUTENTICADA";$("sess").className="pill"+(s?" on":"");
- $("ps").textContent=(s?"almeida":"guest")+"@eagles:~$"}
+  /* ===== Camada narrativa (não é segurança real — veja aviso abaixo) =====
+     O portão de verdade já aconteceu: só chega até aqui quem autenticou no
+     command-post.html com uma conta de cargo "comando" no Supabase. Este
+     "ssh" dentro do terminal é só a ambientação tática do EaglesOS. */
+  const HOST_ESPERADO = "192.168.0.1@techadsumus";
+  const SENHA_ESPERADA = "N0tpetya!!";
 
-function run(line){
- const raw=line.trim();if(!raw)return;
- print($("ps").textContent+" "+raw,"cmd");
- const p=raw.split(/\s+/),c=p[0].toLowerCase();
- if(c==="help"){["Comandos:","  ssh <chave>        autentica a sessão operacional","  logout               encerra a sessão","  whoami               identidade atual","  users                lista identidades","  clear                limpa o terminal","  bordercommand --roleuser [-C|-O|-V] [NOME]","     -C Comando (admin, entrada permitida)","     -O Operador (entrada não permitida)","     -V Vigilância (somente leitura, entrada não permitida)"].forEach(l=>print(l,"dim"));return}
- if(c==="clear"){$("out").replaceChildren();return}
- if(c==="whoami"){print(session?session.nome+" [COMANDO]":"guest [NÃO AUTENTICADO]");return}
- if(c==="users"){users.forEach(u=>print("  "+u.nome.padEnd(20)+" "+ROLE_BY_KEY[u.role].n,"dim"));return}
- if(c==="logout"){setSession(null);addLog("cli.session","cli:"+who(),"logout",true);print(stamp()+" Sessão encerrada.","wrn");return}
- if(c==="ssh"){
-  if(p[1]===KEY){const adm=users.find(u=>u.voce);setSession(adm);addLog("cli.auth",adm.nome,"ssh",true);print(stamp()+" AUTH OK // credencial validada. Bem-vindo, "+adm.nome+".","ok")}
-  else fail("ssh inválido","credencial rejeitada. Tentativa registrada.","401");
-  return}
- if(c==="bordercommand"){fail("prefixo run0 ausente","privilégio insuficiente: comando exige elevação via run0.","403");return}
- if(c==="run0"&&(p[1]||"").toLowerCase()==="bordercommand"){bordercmd(p.slice(2));return}
- fail("cmd desconhecido: "+p[0].slice(0,24),"comando não reconhecido “"+p[0].slice(0,24)+"”. Digite help.","400");
-}
+  const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR");
+  const pad = (s, n) => (s || "").toString().slice(0, n).padEnd(n, " ");
 
-function bordercmd(a){
- if(!session){fail("roleuser sem sessão","acesso negado: sessão não autenticada. Use ssh <chave>.","403");return}
- if(a[0]!=="--roleuser"){fail("sintaxe inválida","sintaxe incorreta. Uso: run0 bordercommand --roleuser [-C|-O|-V] [NOME]","422");return}
- const m=(a[1]||"").match(/^-([A-Za-z])$/);
- if(!m){fail("flag ausente","flag de nível ausente ou malformada.","422");return}
- const fl=m[1].toUpperCase();
- if(!ROLES[fl]||m[1]!==fl){fail("flag inválida -"+m[1].slice(0,4),"flag de nível inválida “-"+m[1].slice(0,4)+"”. Suportadas: -C, -O, -V.","422");return}
- const nome=a.slice(2).join(" ");
- if(!nome){fail("usuário não informado","nome de usuário não informado.","422");return}
- const u=users.find(x=>norm(x.nome)===norm(nome));
- if(!u){fail("alvo não encontrado: "+nome.slice(0,30),"usuário “"+nome.slice(0,30)+"” não encontrado em users.db.","404");return}
- if(u.voce&&fl!=="C"){fail("auto-rebaixamento bloqueado","operação bloqueada: não é permitido rebaixar a própria identidade.","403");return}
- const r=ROLES[fl],ant=ROLE_BY_KEY[u.role].n;
- u.role=r.k;
- addLog("cli.bordercommand",session.nome,u.nome+": "+ant+" → "+r.n,true);
- print(stamp()+" 200 OK // "+u.nome+": "+ant+" → "+r.n+" · entrada EaglesOS "+(r.entry?"PERMITIDA":"NEGADA"),"ok");
- if(!$("v-users").hidden)drawUsers();
- if(!r.entry)print(stamp()+" AVISO // identidade sem permissão de entrada no EaglesOS.","wrn");
-}
+  let meuId = null, meuNome = "comando";
+  let modo = "boot";       // boot -> guest -> senha -> auth
+  let following = false, liveCanal = null, livePoll = null;
+  let historico = [], hi = 0;
+  let cacheTentativas = [];
 
-$("form").onsubmit=e=>{e.preventDefault();const v=$("in").value;$("in").value="";if(v.trim()){history.push(v);hi=history.length}run(v)};
-$("in").addEventListener("keydown",e=>{
- if(e.key==="ArrowUp"&&hi>0){hi--;$("in").value=history[hi];e.preventDefault()}
- if(e.key==="ArrowDown"){hi=Math.min(hi+1,history.length);$("in").value=history[hi]||"";e.preventDefault()}
-});
-$("sair").onclick=()=>{setSession(null);alert("EaglesOS Demo: sessão encerrada no cliente.")};
+  /* ===== Boot ===== */
+  const BOOT = [
+    [450, "EaglesOS Tactical Kernel v4.1 — Border Eagles Unidade #36809", "dim"],
+    [550, "Starting secure intel partition mount...", "dim"],
+    [480, "[  OK  ] Mounted secure intel partition", "ok"],
+    [650, "Starting Border Watch perimeter daemon...", "dim"],
+    [600, "[  OK  ] Started Border Watch perimeter daemon", "ok"],
+    [500, "Starting satellite uplink handshake...", "dim"],
+    [850, "[  OK  ] Satellite uplink established", "ok"],
+    [420, "Starting access audit subsystem (syslog)...", "dim"],
+    [480, "[  OK  ] Started access audit subsystem", "ok"],
+    [480, "Mounting identity vault (users.db)...", "dim"],
+    [600, "[  OK  ] Mounted identity vault", "ok"],
+    [550, "Starting run0 privilege broker...", "dim"],
+    [650, "[  OK  ] Started run0 privilege broker", "ok"],
+    [750, "Checking tactical integrity... 100%", "dim"],
+    [480, "[  OK  ] System integrity verified", "ok"],
+    [550, "Starting EaglesOS command shell...", "dim"],
+    [380, "[  OK  ] Started EaglesOS command shell", "ok"]
+  ];
+  function boot(i) {
+    if (i >= BOOT.length) return setTimeout(motd, 350);
+    const [delay, txt, cls] = BOOT[i];
+    setTimeout(() => { print(txt, cls); boot(i + 1); }, delay);
+  }
+  function motd() {
+    print("");
+    print("EaglesOS v4.1-tactical — ACESSO RESTRITO. Toda atividade é monitorada e auditada.", "dim");
+    print("Autentique-se com: ssh " + HOST_ESPERADO, "dim");
+    print("Digite 'help' a qualquer momento para ver os comandos disponíveis.", "dim");
+    print("");
+    modo = "guest";
+    inp.disabled = false; inp.focus();
+  }
 
-/* Honeypot / ruído simulado */
-setInterval(()=>{
- const f=Math.random()<.5,nome=f?FAKE[Math.floor(Math.random()*FAKE.length)]:"Operador Silva";
- addLog("srv-intel",nome,"GET /brief",!f);
- $("s-nodes").textContent=11+Math.floor(Math.random()*3);
-},9000);
-setInterval(()=>{$("upd").textContent=new Date().toLocaleTimeString("pt-BR")},1000);
+  /* ===== Entrada ===== */
+  document.addEventListener("click", () => inp.focus());
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") { if (hi > 0) { hi--; inp.value = historico[hi] || ""; } e.preventDefault(); return; }
+    if (e.key === "ArrowDown") { hi = Math.min(hi + 1, historico.length); inp.value = historico[hi] || ""; e.preventDefault(); return; }
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const valor = inp.value;
+    inp.value = "";
+    processar(valor);
+  });
 
-print("EaglesOS tactical shell v3.0.0 — acesso restrito. Toda atividade é auditada.","wrn");
-print("Digite help. Autentique-se com: ssh <chave>","dim");
-drawLog();
+  async function processar(valorBruto) {
+    if (modo === "senha") {
+      print(ps.textContent + " " + "•".repeat(valorBruto.length), "cmd");
+      inp.classList.remove("blind"); inp.type = "text";
+      if (valorBruto === SENHA_ESPERADA) {
+        print("AUTH OK // credencial validada. Bem-vindo, " + meuNome + ".", "ok");
+        ps.textContent = "comando@eagles:~$";
+        modo = "auth";
+      } else {
+        print("ERR-401 // credencial rejeitada.", "err");
+        ps.textContent = "guest@eagles:~$";
+        modo = "guest";
+      }
+      return;
+    }
+
+    const raw = valorBruto.trim();
+    if (!raw) return;
+    historico.push(valorBruto); hi = historico.length;
+
+    if (following) {
+      pararFollow();
+      print("-- fim do modo ao vivo --", "dim");
+      return;
+    }
+
+    print(ps.textContent + " " + raw, "cmd");
+    await rodar(raw);
+  }
+
+  async function rodar(raw) {
+    const p = raw.split(/\s+/);
+    const c = p[0].toLowerCase();
+
+    if (c === "help") {
+      printLines([
+        "Comandos disponíveis:",
+        "  ssh <host>                                    inicia autenticação",
+        "  whoami                                        identidade atual",
+        "  clear                                         limpa a tela",
+        "  logout                                        encerra a sessão",
+        "  run0 bordercommand --syslog [--follow]        audita acessos em tempo real",
+        "  run0 bordercommand --usersdb                  lista identidades registradas",
+        "  run0 bordercommand --roleuser -C|-X <nome>    concede/revoga COMANDO"
+      ], "dim");
+      return;
+    }
+    if (c === "clear") { out.replaceChildren(); return; }
+    if (c === "whoami") { print(modo === "auth" ? meuNome + " [COMANDO]" : "guest [NÃO AUTENTICADO]"); return; }
+    if (c === "logout") {
+      pararFollow();
+      await sb.auth.signOut();
+      print("Sessão encerrada. Redirecionando ao Command Post...", "warn");
+      setTimeout(() => { window.location.href = COMMAND_POST_URL; }, 900);
+      return;
+    }
+    if (c === "ssh") {
+      const host = p[1] || "";
+      if (norm(host) !== norm(HOST_ESPERADO)) {
+        print("ERR-401 // host desconhecido. Uso: ssh " + HOST_ESPERADO, "err");
+        return;
+      }
+      print("Password:", "dim");
+      modo = "senha"; ps.textContent = "";
+      inp.type = "password"; inp.classList.add("blind");
+      return;
+    }
+    if (c === "bordercommand") {
+      print("ERR-403 // privilégio insuficiente: comando exige elevação via run0.", "err");
+      return;
+    }
+    if (c === "run0" && (p[1] || "").toLowerCase() === "bordercommand") { await bordercommand(p.slice(2)); return; }
+
+    print("ERR-400 // comando não reconhecido “" + p[0].slice(0, 24) + "”. Digite help.", "err");
+  }
+
+  function pararFollow() {
+    following = false;
+    if (liveCanal) { sb.removeChannel(liveCanal); liveCanal = null; }
+    if (livePoll) { clearInterval(livePoll); livePoll = null; }
+    ps.textContent = (modo === "auth" ? "comando" : "guest") + "@eagles:~$";
+  }
+
+  function linhaLog(t) {
+    const linha = "[" + hora(t.criado_em) + "] " + pad(t.alvo, 13) + pad(t.nome_tentado, 19) + (t.sucesso ? "200 OK" : "403 DENIED");
+    print(linha, t.sucesso ? "ok" : "err");
+  }
+
+  async function bordercommand(args) {
+    if (modo !== "auth") { print("ERR-403 // acesso negado: sessão não autenticada. Use ssh " + HOST_ESPERADO + ".", "err"); return; }
+    const flag = args[0];
+
+    if (flag === "--syslog") {
+      const { data, error } = await sb.from("tentativas_acesso").select("*").order("criado_em", { ascending: false }).limit(15);
+      if (error) { print("ERR-500 // falha ao consultar system.log: " + error.message, "err"); return; }
+      cacheTentativas = (data || []).slice().reverse();
+
+      if (args[1] === "--follow") {
+        print("-- MODO AO VIVO (system.log) — pressione ENTER para encerrar --", "dim");
+        cacheTentativas.forEach(linhaLog);
+        following = true; ps.textContent = "[LIVE]";
+        liveCanal = sb.channel("eaglesos-syslog")
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "tentativas_acesso" }, (payload) => linhaLog(payload.new))
+          .subscribe();
+        livePoll = setInterval(async () => {
+          const { data: d2 } = await sb.from("tentativas_acesso").select("*").order("criado_em", { ascending: false }).limit(1);
+          // fallback silencioso: o canal realtime normalmente já cobre isso
+        }, 20000);
+        return;
+      }
+      print("-- system.log (últimas " + cacheTentativas.length + " entradas; use --follow para tempo real) --", "dim");
+      cacheTentativas.forEach(linhaLog);
+      return;
+    }
+
+    if (flag === "--usersdb") {
+      const { data, error } = await sb.from("operadores").select("nome, email, role").order("nome");
+      if (error) { print("ERR-500 // falha ao consultar users.db: " + error.message, "err"); return; }
+      print("-- users.db (" + (data || []).length + " identidades) --", "dim");
+      print(pad("NOME", 20) + pad("EMAIL", 29) + "NÍVEL", "dim");
+      (data || []).forEach(u => {
+        const comando = u.role === "comando";
+        const nivel = comando ? "COMANDO" + (u.email && meuEmail === u.email ? " (você)" : "") : "SEM ACESSO";
+        print(pad(u.nome || "—", 20) + pad(u.email || "—", 29) + nivel, comando ? "ok" : "dim");
+      });
+      return;
+    }
+
+    if (flag === "--roleuser") {
+      const m = (args[1] || "").match(/^-([A-Za-z])$/);
+      if (!m) { print("ERR-422 // sintaxe: run0 bordercommand --roleuser -C|-X <nome>", "err"); return; }
+      const fl = m[1].toUpperCase();
+      if (fl !== "C" && fl !== "X") { print("ERR-422 // flag inválida “-" + m[1] + "”. Suportadas: -C (conceder), -X (revogar).", "err"); return; }
+      const nome = args.slice(2).join(" ");
+      if (!nome) { print("ERR-422 // nome de usuário não informado.", "err"); return; }
+
+      const { data: candidatos, error: e1 } = await sb.from("operadores").select("id, nome, role").ilike("nome", nome);
+      if (e1) { print("ERR-500 // falha ao consultar users.db: " + e1.message, "err"); return; }
+      const alvo = (candidatos || []).find(u => norm(u.nome) === norm(nome)) || (candidatos || [])[0];
+      if (!alvo) { print("ERR-404 // usuário “" + nome.slice(0, 30) + "” não encontrado em users.db.", "err"); return; }
+      if (alvo.id === meuId && fl === "X") { print("ERR-403 // operação bloqueada: não é permitido revogar a própria identidade.", "err"); return; }
+
+      const antes = alvo.role === "comando" ? "COMANDO" : "SEM ACESSO";
+      const novoRole = (fl === "C") ? "comando" : "operador";
+      const { error: e2 } = await sb.from("operadores").update({ role: novoRole }).eq("id", alvo.id);
+      if (e2) { print("ERR-500 // falha ao alterar cargo: " + e2.message, "err"); return; }
+      const depois = novoRole === "comando" ? "COMANDO" : "SEM ACESSO";
+      print("200 OK // " + alvo.nome + ": " + antes + " → " + depois, "ok");
+      return;
+    }
+
+    print("ERR-400 // flag desconhecida. Use --syslog, --usersdb ou --roleuser.", "err");
+  }
+
+  /* ===== Portão real: exige sessão com cargo "comando" ===== */
+  let meuEmail = null;
+  (async function iniciar() {
+    const { data } = await sb.auth.getSession();
+    if (!data || !data.session) { window.location.href = COMMAND_POST_URL; return; }
+    const { data: perfil } = await sb.from("operadores").select("role, nome, email").eq("id", data.session.user.id).maybeSingle();
+    if (!perfil || perfil.role !== "comando") {
+      await sb.auth.signOut();
+      window.location.href = COMMAND_POST_URL;
+      return;
+    }
+    meuId = data.session.user.id;
+    meuNome = perfil.nome || "comando";
+    meuEmail = perfil.email;
+    print("Booting EaglesOS...", "dim");
+    boot(0);
+  })();
 </script>
 </body>
 </html>
